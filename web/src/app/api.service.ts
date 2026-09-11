@@ -26,10 +26,14 @@ export interface BookingResponse extends BookingRequest {
 export interface ContactRequest { name: string; email: string; company: string; message: string; }
 export interface ContactResponse extends ContactRequest { id: string; status: string; message: string; }
 
+interface LikeMediaRuntimeConfig {
+  __LIKE_MEDIA_API_URL__?: string;
+}
+
 @Injectable({ providedIn: 'root' })
 export class ApiService {
   private readonly http = inject(HttpClient);
-  private readonly baseUrl = 'http://localhost:3000/api';
+  private readonly baseUrl = ((globalThis as LikeMediaRuntimeConfig).__LIKE_MEDIA_API_URL__ ?? 'http://localhost:3000/api').replace(/\/$/, '');
 
   getServices(): Observable<ServicePackage[]> {
     return this.http.get<ServicePackage[]>(`${this.baseUrl}/services`);

@@ -25,6 +25,7 @@
 *.err.log
 api-smoke.*
 .railway/
+**/.netlify/
 
 # IDE / OS
 .vscode/*
@@ -36,3 +37,6 @@ Thumbs.db
 
 # TypeScript incremental build info
 *.tsbuildinfo
+
+# Local Netlify folder
+.netlify
