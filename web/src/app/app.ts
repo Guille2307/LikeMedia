@@ -1,4 +1,4 @@
-import { Component, OnInit, computed, inject, signal } from '@angular/core';
+import { AfterViewInit, Component, OnInit, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ApiService, BookingResponse, ContactResponse, Currency, ServiceCategory, ServicePackage } from './api.service';
 
@@ -21,7 +21,7 @@ const LOCAL_SERVICES: ServicePackage[] = [
   templateUrl: './app.html',
   styleUrl: './app.scss',
 })
-export class App implements OnInit {
+export class App implements OnInit, AfterViewInit {
   private readonly api = inject(ApiService);
 
   readonly currency = signal<Currency>('USD');
@@ -46,6 +46,29 @@ export class App implements OnInit {
 
   ngOnInit(): void {
     this.api.getServices().subscribe({ next: (services) => this.services.set(services), error: () => undefined });
+  }
+
+  ngAfterViewInit(): void {
+    const revealItems = Array.from(document.querySelectorAll<HTMLElement>('[data-reveal]'));
+    if (!revealItems.length) return;
+
+    if (typeof IntersectionObserver === 'undefined') {
+      revealItems.forEach((item) => item.classList.add('is-visible'));
+      return;
+    }
+
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        if (!entry.isIntersecting) return;
+        (entry.target as HTMLElement).classList.add('is-visible');
+        observer.unobserve(entry.target);
+      });
+    }, { threshold: 0.14, rootMargin: '0px 0px -7% 0px' });
+
+    revealItems.forEach((item, index) => {
+      item.style.setProperty('--reveal-delay', `${Math.min(index * 45, 360)}ms`);
+      observer.observe(item);
+    });
   }
 
   priceFor(service: ServicePackage): string {
