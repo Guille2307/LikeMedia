@@ -149,6 +149,7 @@ legend { margin-bottom: 10px; }
 .contact-caption { position: absolute; right: 0; bottom: 0; padding: 17px 20px; color: var(--ink); background: var(--paper); font-size: 13px; font-weight: 800; }
 .contact-copy h2 { margin-bottom: 24px; }
 .contact-copy > p:not(.eyebrow) { max-width: 440px; margin-bottom: 34px; color: var(--ink-soft); font-size: 16px; line-height: 1.55; }
+.contact-email { display: inline-block; margin: -12px 0 30px; color: var(--ink); font-size: 15px; font-weight: 800; text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 4px; }
 .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
 
 .site-footer { color: var(--paper); background: var(--ink); }
@@ -157,6 +158,7 @@ legend { margin-bottom: 10px; }
 .footer-top p { margin: 0; color: rgba(243,235,221,.72); font-size: 13px; }
 .light-link { color: var(--paper); }
 .footer-bottom { display: flex; justify-content: space-between; gap: 18px; padding-top: 18px; padding-bottom: 24px; color: rgba(243,235,221,.6); font-size: 11px; }
+.footer-email { color: inherit; text-decoration: underline; text-underline-offset: 3px; }
 
 @media (max-width: 900px) {
   .section-shell { width: min(100% - 40px, 720px); }
