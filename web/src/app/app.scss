@@ -42,7 +42,7 @@ button { cursor: pointer; }
 .site-nav { position: sticky; top: 0; z-index: 10; display: flex; align-items: center; justify-content: space-between; min-height: 76px; padding: 16px 32px; border-bottom: 1px solid rgba(243,235,221,.22); background: var(--ink); }
 .brand { display: inline-flex; align-items: center; }
 .brand-logo { display: block; width: 140px; height: 38px; overflow: hidden; }
-.brand-logo img { width: 100%; height: 100%; object-fit: cover; transform: scale(1.32); }
+.brand-logo img { width: 100%; height: 100%; object-fit: cover; object-position: center center; transform: none; }
 .nav-links { display: flex; gap: 28px; color: rgba(243,235,221,.72); font-size: 13px; }
 .nav-links a, .nav-cta { transition: color .2s ease; }
 .nav-links a:hover, .nav-cta:hover { color: var(--paper); }
