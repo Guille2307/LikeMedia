@@ -1,0 +1,13 @@
+{
+  "name": "like-media-platform",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Like Media · Angular 22 + NestJS 12",
+  "scripts": {
+    "dev:web": "npm --prefix web start",
+    "dev:api": "npm --prefix api run start:dev",
+    "build:web": "npm --prefix web run build",
+    "build:api": "npm --prefix api run build",
+    "lint:api": "npm --prefix api run lint"
+  }
+}

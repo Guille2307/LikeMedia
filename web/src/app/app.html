@@ -1,0 +1,123 @@
+<main>
+  <nav class="site-nav" aria-label="Navegación principal">
+    <a class="brand" href="#inicio" aria-label="Like Media, inicio">
+      <span class="brand-logo"><img src="/like-media/like-media-logo.png" alt="Like Media"></span>
+    </a>
+    <div class="nav-links">
+      <a href="#servicios">Servicios</a>
+      <a href="#proceso">Cómo trabajamos</a>
+      <a href="#contacto">Contacto</a>
+    </div>
+    <a class="nav-cta" href="#cita">Reservar llamada <span>↗</span></a>
+  </nav>
+
+  <section id="inicio" class="hero section-shell">
+    <div class="hero-copy">
+      <p class="eyebrow">AGENCIA DIGITAL · LATINOAMÉRICA · EUROPA</p>
+      <p class="hero-signature">ideas que vuelan</p>
+      <h1>Diseñamos lo que mueve tu marca.</h1>
+      <p class="hero-lede">Webs, tiendas online y soluciones digitales con una mezcla precisa de criterio, energía y claridad.</p>
+      <div class="hero-actions">
+        <a class="button button-primary" href="#servicios">Explorar servicios <span>↗</span></a>
+        <a class="button button-quiet" href="#cita">Reservar videollamada <span>↓</span></a>
+      </div>
+      <div class="hero-proof">
+        <div><strong>08</strong><span>formatos de servicio</span></div>
+        <div><strong>USD · EUR</strong><span>tarifas referenciales</span></div>
+        <div><strong>100%</strong><span>alcance por escrito</span></div>
+      </div>
+    </div>
+    <div class="hero-visual">
+      <img src="/like-media/team-hero-corrected.png" alt="Equipo creativo revisando un diseño web en un estudio luminoso">
+      <div class="hero-note"><span class="hero-note-plane"><img src="/like-media/paper-plane-brand.jpg" alt=""></span>Diseño que conecta con personas</div>
+    </div>
+  </section>
+
+  <section class="intro-strip section-shell" aria-label="Propuesta de valor">
+    <div class="intro-label"><span>LIKE MEDIA / 01</span><img src="/like-media/paper-plane-brand.jpg" alt="Avión de papel de Like Media"></div>
+    <p>Un socio digital para negocios que quieren dejar de improvisar y empezar a comunicar, vender y crecer con intención.</p>
+    <a href="#proceso" class="text-link">Conoce el enfoque <span>↗</span></a>
+  </section>
+
+  <section id="servicios" class="services section-shell">
+    <div class="section-heading">
+      <div><p class="eyebrow">CATÁLOGO DE SERVICIOS</p><h2>Una solución para cada etapa.</h2></div>
+      <p>Elige una base y la convertimos en una propuesta concreta según tus objetivos, contenido e integraciones.</p>
+    </div>
+    <div class="service-controls">
+      <div class="filter-group" role="group" aria-label="Filtrar servicios">
+        <button type="button" class="filter-button" [class.active]="category() === 'Todos'" (click)="setCategory('Todos')">Todos</button>
+        <button type="button" class="filter-button" [class.active]="category() === 'Presencia'" (click)="setCategory('Presencia')">Presencia</button>
+        <button type="button" class="filter-button" [class.active]="category() === 'Venta'" (click)="setCategory('Venta')">Venta</button>
+        <button type="button" class="filter-button" [class.active]="category() === 'Soporte'" (click)="setCategory('Soporte')">Soporte</button>
+      </div>
+      <div class="currency-toggle" role="group" aria-label="Mostrar moneda">
+        <button type="button" class="currency-button" [class.active]="currency() === 'USD'" (click)="setCurrency('USD')">USD</button>
+        <button type="button" class="currency-button" [class.active]="currency() === 'EUR'" (click)="setCurrency('EUR')">EUR</button>
+      </div>
+    </div>
+
+    <div class="service-grid">
+      @for (service of filteredServices(); track service.id) {
+        <article class="service-card" [class.featured]="service.featured">
+          <div class="service-card-top"><span class="eyebrow">{{ service.eyebrow }}</span>@if (service.featured) {<span class="featured-label">Más solicitado</span>}</div>
+          <h3>{{ service.title }}</h3>
+          <p class="service-description">{{ service.description }}</p>
+          <div class="price-line"><strong>{{ priceFor(service) }}</strong><span>referencial</span></div>
+          <ul>@for (item of service.includes; track item) {<li>{{ item }}</li>}</ul>
+          <a class="service-link" href="#contacto">Hablar de este paquete <span>↗</span></a>
+        </article>
+      }
+      <article class="service-card service-card-visual" aria-label="Mesa de trabajo con propuestas visuales y avión de papel"><img src="/like-media/tariff-story.png" alt="Mesa de trabajo con propuestas visuales y avión de papel"></article>
+    </div>
+    <p class="section-footnote">* El número de páginas, productos, idiomas e integraciones se concreta en la cotización final. Dominio, hosting, licencias y comisiones externas se presupuestan aparte salvo indicación.</p>
+    <div class="service-visual-break"><img src="/like-media/catalog-worktable.png" alt="Mesa de trabajo con portátil, planos y avión de papel"><div class="service-visual-caption"><span class="eyebrow">EL SIGUIENTE PASO</span><strong>Una idea clara se convierte en una experiencia que funciona.</strong></div></div>
+  </section>
+
+  <section id="proceso" class="process section-shell">
+    <div class="process-image"><img src="/like-media/ecommerce-story.png" alt="Emprendedora preparando pedidos para una tienda online"></div>
+    <div class="process-copy">
+      <p class="eyebrow">CÓMO TRABAJAMOS</p><h2>Del primer mensaje a una experiencia lista para crecer.</h2>
+      <div class="process-list">
+        <div><span>01</span><div><h3>Entendemos el contexto</h3><p>Objetivos, audiencia, contenido y sistemas que ya forman parte de tu negocio.</p></div></div>
+        <div><span>02</span><div><h3>Definimos el alcance</h3><p>Una propuesta clara con páginas, productos, integraciones y responsabilidades.</p></div></div>
+        <div><span>03</span><div><h3>Diseñamos la solución</h3><p>Una experiencia visual coherente, responsive y lista para convertirse en producto.</p></div></div>
+      </div>
+      <a class="text-link" href="#cita">Agenda una conversación <span>↗</span></a>
+    </div>
+  </section>
+
+  <section id="cita" class="booking section-shell">
+    <div class="booking-copy"><p class="eyebrow">RESERVA UNA VIDEOLLAMADA</p><h2>Trae la idea. Nosotros ponemos orden.</h2><p>Selecciona un día y un horario. En esta primera versión usamos Jitsi Meet para crear una sala gratuita al confirmar tu solicitud.</p><div class="booking-aside"><span class="aside-line"></span><span>30 min · sin compromiso</span></div></div>
+    <div class="booking-form-wrap">
+      @if (bookingStatus() === 'success' && bookingResponse(); as response) {
+        <div class="form-success"><span class="success-mark">✓</span><h3>Solicitud recibida</h3><p>{{ response.message }}</p><p><strong>{{ response.date }} · {{ response.time }}</strong></p><a class="button button-primary" [href]="response.meetingUrl" target="_blank" rel="noreferrer">Abrir sala Jitsi <span>↗</span></a><button type="button" class="text-link reset-button" (click)="bookingStatus.set('idle')">Reservar otra fecha</button></div>
+      } @else {
+        <form class="booking-form" (ngSubmit)="submitBooking()">
+          <label>Tu nombre<input required [(ngModel)]="booking.name" name="booking-name" placeholder="Nombre y apellido"></label>
+          <label>Tu email<input required type="email" [(ngModel)]="booking.email" name="booking-email" placeholder="hola@tuempresa.com"></label>
+          <fieldset><legend>Elige un día</legend><div class="date-options">@for (date of availableDates; track date) {<button type="button" class="date-option" [class.selected]="booking.date === date" (click)="selectDate(date)">{{ date }}</button>}</div></fieldset>
+          <fieldset><legend>Elige una hora</legend><div class="time-options">@for (time of availableTimes; track time) {<button type="button" class="time-option" [class.selected]="booking.time === time" (click)="selectTime(time)">{{ time }}</button>}</div></fieldset>
+          @if (bookingStatus() === 'error') {<p class="form-error" role="alert">{{ bookingError() }}</p>}
+          <button class="button button-primary full-width" type="submit" [disabled]="bookingStatus() === 'loading'">{{ bookingStatus() === 'loading' ? 'Enviando…' : 'Solicitar videollamada' }} <span>↗</span></button>
+        </form>
+      }
+    </div>
+  </section>
+
+  <section class="documents section-shell">
+    <div class="documents-intro"><div><p class="eyebrow">RECURSOS PARA COMPARTIR</p><h2>Descarga el tarifario completo.</h2></div><figure class="documents-visual"><img src="/like-media/tariff-story.png" alt="Propuesta visual con planes de servicio y avión de papel"><figcaption>Propuestas claras para tomar decisiones con confianza.</figcaption></figure></div>
+    <div class="document-links"><a href="/docs/Like_Media_Servicios_Digitales_Latinoamerica_EEUU_USD.pdf" download><span>USD</span><div><strong>Latinoamérica y Estados Unidos</strong><small>Tarifario comercial en dólares · PDF</small></div><b>↓</b></a><a href="/docs/Like_Media_Servicios_Digitales_Europa_EUR.pdf" download><span>EUR</span><div><strong>Europa</strong><small>Tarifario comercial en euros · PDF</small></div><b>↓</b></a></div>
+  </section>
+
+  <section id="contacto" class="contact section-shell">
+    <div class="contact-visual"><img src="/like-media/booking-story.png" alt="Profesionales en una videollamada de trabajo"><div class="contact-caption">Tu siguiente paso puede empezar aquí.</div></div>
+    <div class="contact-copy"><p class="eyebrow">HABLEMOS</p><h2>Cuéntanos qué quieres construir.</h2><p>Si todavía no sabes qué paquete encaja, escríbenos. Te ayudaremos a convertir la idea en un alcance sencillo de entender.</p>
+      @if (contactStatus() === 'success' && contactResponse(); as response) {<div class="form-success compact"><span class="success-mark">✓</span><h3>Mensaje recibido</h3><p>{{ response.message }}</p><button type="button" class="text-link reset-button" (click)="contactStatus.set('idle')">Enviar otro mensaje</button></div>} @else {
+        <form class="contact-form" (ngSubmit)="submitContact()"><div class="form-row"><label>Nombre<input required [(ngModel)]="contact.name" name="contact-name" placeholder="Tu nombre"></label><label>Email<input required type="email" [(ngModel)]="contact.email" name="contact-email" placeholder="tu@email.com"></label></div><label>Empresa o proyecto<input [(ngModel)]="contact.company" name="company" placeholder="Nombre de tu negocio"></label><label>¿Qué tienes en mente?<textarea required [(ngModel)]="contact.message" name="message" rows="4" placeholder="Cuéntanos brevemente tu objetivo..."></textarea></label>@if (contactStatus() === 'error') {<p class="form-error" role="alert">{{ contactError() }}</p>}<button class="button button-dark" type="submit" [disabled]="contactStatus() === 'loading'">{{ contactStatus() === 'loading' ? 'Enviando…' : 'Enviar mensaje' }} <span>↗</span></button></form>
+      }
+    </div>
+  </section>
+
+  <footer class="site-footer"><div class="footer-top section-shell"><a class="brand footer-brand" href="#inicio" aria-label="Like Media, inicio"><span class="brand-logo"><img src="/like-media/like-media-logo.png" alt="Like Media"></span></a><p>Diseño digital con criterio, energía y claridad.</p><a class="text-link light-link" href="#inicio">Volver arriba ↑</a></div><div class="footer-bottom section-shell"><span>© 2026 Like Media</span><span>Tarifas referenciales en USD y EUR</span><span>[@likemedia] · [correo@likemedia.com]</span></div></footer>
+</main>

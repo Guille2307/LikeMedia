@@ -1,0 +1,131 @@
+import { BadRequestException, Injectable } from '@nestjs/common';
+
+export type ServiceCategory = 'Presencia' | 'Venta' | 'Soporte';
+
+export interface ServicePackage {
+  id: string;
+  category: ServiceCategory;
+  eyebrow: string;
+  title: string;
+  price: { usd: string; eur: string };
+  description: string;
+  includes: string[];
+  featured?: boolean;
+}
+
+export interface BookingInput {
+  name?: string;
+  email?: string;
+  date?: string;
+  time?: string;
+}
+
+export interface ContactInput {
+  name?: string;
+  email?: string;
+  company?: string;
+  message?: string;
+}
+
+const SERVICES: ServicePackage[] = [
+  {
+    id: 'landing', category: 'Presencia', eyebrow: '01 · PRESENCIA', title: 'Landing Page',
+    price: { usd: '$200–300', eur: '€200–300' },
+    description: 'Una página enfocada en una campaña, servicio o captación de contactos.',
+    includes: ['Responsive', 'WhatsApp y formulario', 'SEO básico', 'Analítica inicial'],
+  },
+  {
+    id: 'negocio', category: 'Presencia', eyebrow: '02 · PRESENCIA', title: 'Web Negocio',
+    price: { usd: '$400–600', eur: '€400–600' },
+    description: 'Presencia digital clara para presentar la empresa, servicios y canales de contacto.',
+    includes: ['3–5 páginas orientativas', 'Panel de contenido', 'SEO técnico básico', 'Mapa y redes'],
+  },
+  {
+    id: 'profesional', category: 'Presencia', eyebrow: '03 · PRESENCIA', title: 'Web Profesional',
+    price: { usd: '$600–800', eur: '€600–800' },
+    description: 'Una web más completa para marcas con más contenido y necesidades de gestión.',
+    includes: ['5–8 páginas orientativas', 'Diseño más personalizado', 'SEO inicial ampliado', 'Analítica y eventos'],
+  },
+  {
+    id: 'tienda', category: 'Venta', eyebrow: '04 · VENTA', title: 'Tienda Online',
+    price: { usd: '$800–1,200', eur: '€800–1,200' },
+    description: 'Catálogo y proceso de compra para comenzar a vender por internet.',
+    includes: ['Catálogo y categorías', 'Carrito y checkout', 'Pago compatible', 'Panel de pedidos'],
+    featured: true,
+  },
+  {
+    id: 'ecommerce', category: 'Venta', eyebrow: '05 · VENTA', title: 'E-commerce Pro',
+    price: { usd: '$1,200–1,800', eur: '€1,200–1,800' },
+    description: 'Una operación de venta online con más personalización, medición e integraciones.',
+    includes: ['Variantes y stock', 'Cupones y reglas', 'Pagos y envíos avanzados', 'Conversión y analítica'],
+  },
+  {
+    id: 'custom', category: 'Venta', eyebrow: '06 · SOLUCIÓN', title: 'Desarrollo a medida',
+    price: { usd: '$2,000–2,500', eur: '€2,000–2,500' },
+    description: 'Software web construido alrededor de procesos, usuarios e integraciones específicas.',
+    includes: ['Alcance funcional', 'Frontend y backend', 'APIs e integraciones', 'Panel administrativo'],
+  },
+  {
+    id: 'basic-maintenance', category: 'Soporte', eyebrow: '07 · SOPORTE', title: 'Mantenimiento básico',
+    price: { usd: '$30–50 / mes', eur: '€30–50 / mes' },
+    description: 'Continuidad técnica para mantener tu sitio actualizado después de publicar.',
+    includes: ['Actualizaciones', 'Copias si el hosting lo permite', 'Incidencias menores', 'Cambios pequeños'],
+  },
+  {
+    id: 'pro-maintenance', category: 'Soporte', eyebrow: '08 · SOPORTE', title: 'Mantenimiento Pro',
+    price: { usd: '$70–120 / mes', eur: '€70–120 / mes' },
+    description: 'Más capacidad para cambios de contenido, productos y seguimiento técnico.',
+    includes: ['Todo lo básico', 'Cambios de productos', 'Revisión de rendimiento', 'Atención prioritaria'],
+  },
+];
+
+const AVAILABLE_DATES = ['sáb, 12 sept', 'dom, 13 sept', 'lun, 14 sept', 'mar, 15 sept', 'mié, 16 sept'];
+const AVAILABLE_TIMES = ['09:30', '11:00', '16:00'];
+
+@Injectable()
+export class AppService {
+  private readonly bookings: Array<Record<string, string>> = [];
+  private readonly contacts: Array<Record<string, string>> = [];
+
+  getServices(): ServicePackage[] { return SERVICES; }
+
+  getHealth(): Record<string, string> {
+    return { status: 'ok', service: 'like-media-api', version: '0.1.0' };
+  }
+
+  createBooking(input: BookingInput): Record<string, string> {
+    const name = input.name?.trim();
+    const email = input.email?.trim();
+    const date = input.date?.trim();
+    const time = input.time?.trim();
+    if (!name || !email || !date || !time || !/^\S+@\S+\.\S+$/.test(email)) {
+      throw new BadRequestException('Nombre, email, día y hora son obligatorios.');
+    }
+    if (!AVAILABLE_DATES.includes(date) || !AVAILABLE_TIMES.includes(time)) {
+      throw new BadRequestException('El día o la hora seleccionados no están disponibles.');
+    }
+    const id = `LM-${Date.now().toString(36).toUpperCase()}`;
+    const room = `like-media-${id.toLowerCase()}`;
+    const booking = { id, name, email, date, time, provider: 'Jitsi Meet', meetingUrl: `https://meet.jit.si/${room}` };
+    this.bookings.push(booking);
+    return { ...booking, message: 'Solicitud recibida. Te enviaremos la confirmación por email.' };
+  }
+
+  createContact(input: ContactInput): Record<string, string> {
+    const name = input.name?.trim();
+    const email = input.email?.trim();
+    const message = input.message?.trim();
+    if (!name || !email || !message || !/^\S+@\S+\.\S+$/.test(email)) {
+      throw new BadRequestException('Nombre, email y mensaje son obligatorios.');
+    }
+    const contact = {
+      id: `MSG-${Date.now().toString(36).toUpperCase()}`,
+      name,
+      email,
+      company: input.company?.trim() ?? '',
+      message,
+    };
+    this.contacts.push(contact);
+    return { ...contact, status: 'received', message: 'Mensaje recibido. Te responderemos pronto.' };
+  }
+}
