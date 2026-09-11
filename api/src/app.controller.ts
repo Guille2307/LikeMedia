@@ -17,17 +17,17 @@ export class AppController {
   }
 
   @Get('api/services')
-  getServices() {
+  async getServices() {
     return this.appService.getServices();
   }
 
   @Post('api/bookings')
-  createBooking(@Body() body: BookingInput) {
+  async createBooking(@Body() body: BookingInput) {
     return this.appService.createBooking(body);
   }
 
   @Post('api/contact')
-  createContact(@Body() body: ContactInput) {
+  async createContact(@Body() body: ContactInput) {
     return this.appService.createContact(body);
   }
 }

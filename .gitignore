@@ -11,11 +11,20 @@
 **/.env
 **/.env.*
 !**/.env.example
+**/*.local
+**/*.secret
+**/*secret*.json
+**/*credentials*.json
+**/*.pem
+**/*.key
+**/*.p12
+**/*.pfx
 
 # Logs and temporary files
 *.log
 *.err.log
 api-smoke.*
+.railway/
 
 # IDE / OS
 .vscode/*

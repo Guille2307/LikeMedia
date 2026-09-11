@@ -1,4 +1,5 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable, InternalServerErrorException } from '@nestjs/common';
+import { DatabaseService } from './database.service.js';
 
 export type ServiceCategory = 'Presencia' | 'Venta' | 'Soporte';
 
@@ -87,13 +88,38 @@ export class AppService {
   private readonly bookings: Array<Record<string, string>> = [];
   private readonly contacts: Array<Record<string, string>> = [];
 
-  getServices(): ServicePackage[] { return SERVICES; }
+  constructor(private readonly database: DatabaseService) {}
 
-  getHealth(): Record<string, string> {
-    return { status: 'ok', service: 'like-media-api', version: '0.1.0' };
+  async getServices(): Promise<ServicePackage[]> {
+    const result = await this.database.query<{
+      id: string; category: ServiceCategory; eyebrow: string; title: string;
+      price_usd: string; price_eur: string; description: string; includes: string[]; featured: boolean;
+    }>('SELECT id, category, eyebrow, title, price_usd, price_eur, description, includes, featured FROM service_packages ORDER BY id');
+    if (!result?.rows.length) {
+      if (this.database.isConnected) await this.seedServices();
+      return SERVICES;
+    }
+    return result.rows.map((row) => ({
+      id: row.id, category: row.category, eyebrow: row.eyebrow, title: row.title,
+      price: { usd: row.price_usd, eur: row.price_eur }, description: row.description,
+      includes: row.includes, featured: row.featured,
+    }));
   }
 
-  createBooking(input: BookingInput): Record<string, string> {
+  private async seedServices(): Promise<void> {
+    for (const service of SERVICES) {
+      await this.database.query('INSERT INTO service_packages (id, category, eyebrow, title, price_usd, price_eur, description, includes, featured) VALUES ($1, $2, $3, $4, $5, $6, $7, $8::jsonb, $9) ON CONFLICT (id) DO NOTHING', [
+        service.id, service.category, service.eyebrow, service.title, service.price.usd, service.price.eur,
+        service.description, JSON.stringify(service.includes), service.featured ?? false,
+      ]);
+    }
+  }
+
+  getHealth(): Record<string, string> {
+    return { status: 'ok', service: 'like-media-api', version: '0.1.0', database: this.database.status };
+  }
+
+  async createBooking(input: BookingInput): Promise<Record<string, string>> {
     const name = input.name?.trim();
     const email = input.email?.trim();
     const date = input.date?.trim();
@@ -107,11 +133,19 @@ export class AppService {
     const id = `LM-${Date.now().toString(36).toUpperCase()}`;
     const room = `like-media-${id.toLowerCase()}`;
     const booking = { id, name, email, date, time, provider: 'Jitsi Meet', meetingUrl: `https://meet.jit.si/${room}` };
-    this.bookings.push(booking);
+    if (this.database.isConnected) {
+      try {
+        await this.database.query('INSERT INTO bookings (id, name, email, date, time, provider, meeting_url) VALUES ($1, $2, $3, $4, $5, $6, $7)', [id, name, email, date, time, booking.provider, booking.meetingUrl]);
+      } catch {
+        throw new InternalServerErrorException('No pudimos guardar la reserva.');
+      }
+    } else {
+      this.bookings.push(booking);
+    }
     return { ...booking, message: 'Solicitud recibida. Te enviaremos la confirmación por email.' };
   }
 
-  createContact(input: ContactInput): Record<string, string> {
+  async createContact(input: ContactInput): Promise<Record<string, string>> {
     const name = input.name?.trim();
     const email = input.email?.trim();
     const message = input.message?.trim();
@@ -125,7 +159,15 @@ export class AppService {
       company: input.company?.trim() ?? '',
       message,
     };
-    this.contacts.push(contact);
+    if (this.database.isConnected) {
+      try {
+        await this.database.query('INSERT INTO contacts (id, name, email, company, message) VALUES ($1, $2, $3, $4, $5)', [contact.id, contact.name, contact.email, contact.company, contact.message]);
+      } catch {
+        throw new InternalServerErrorException('No pudimos guardar el mensaje.');
+      }
+    } else {
+      this.contacts.push(contact);
+    }
     return { ...contact, status: 'received', message: 'Mensaje recibido. Te responderemos pronto.' };
   }
 }
