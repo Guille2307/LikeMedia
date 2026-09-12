@@ -15,7 +15,9 @@
         <label for="admin-password">Contraseña</label>
         <input id="admin-password" name="admin-password" type="password" [(ngModel)]="password" autocomplete="current-password" placeholder="Tu contraseña" required>
         @if (error) { <p class="admin-error" role="alert">{{ error }}</p> }
-        <button class="admin-button" type="submit" [disabled]="loading">{{ loading ? 'Comprobando…' : 'Entrar al panel' }}</button>
+        <button class="admin-button" type="submit" [disabled]="loading" [attr.aria-busy]="loading">
+          @if (loading) { <span class="button-spinner" aria-hidden="true"></span> Comprobando… } @else { Entrar al panel }
+        </button>
       </form>
       <a href="/" class="admin-back">← Volver a la web pública</a>
     </section>
