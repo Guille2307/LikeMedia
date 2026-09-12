@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, OnInit, inject } from '@angular/core';
+import { ChangeDetectorRef, Component, OnInit, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { timeout } from 'rxjs';
 import { AdminBooking, AdminContact, AdminOverview, ApiService, ServicePackage } from './api.service';
@@ -19,6 +19,7 @@ function emptyService(): ServicePackage {
 })
 export class AdminApp implements OnInit {
   private readonly api = inject(ApiService);
+  private readonly changeDetector = inject(ChangeDetectorRef);
   email = 'info@likemedia.es';
   password = '';
   private accessToken = '';
@@ -66,6 +67,7 @@ export class AdminApp implements OnInit {
       if (this.loginAttempt !== attempt || !this.loading) return;
       this.loading = false;
       this.error = 'No se pudo conectar con el servidor. Revisa la conexión e inténtalo de nuevo.';
+      this.changeDetector.detectChanges();
     }, 12_000);
     this.api.loginAdmin({ email, password: this.password }).pipe(timeout({ first: 20_000 })).subscribe({
       next: (response) => {
@@ -81,6 +83,7 @@ export class AdminApp implements OnInit {
         this.loading = false;
         sessionStorage.setItem('like-media-admin-jwt', response.accessToken);
         sessionStorage.setItem('like-media-admin-name', response.user.name);
+        this.changeDetector.detectChanges();
       },
       error: (response: { status?: number; error?: { message?: string }; name?: string }) => {
         window.clearTimeout(watchdog);
@@ -90,6 +93,7 @@ export class AdminApp implements OnInit {
         else if (response.status === 503) this.error = 'El acceso por correo y contraseña aún no está configurado en el servidor.';
         else if (response.name === 'TimeoutError') this.error = 'El servidor está tardando demasiado. Comprueba tu conexión y vuelve a intentarlo.';
         else this.error = response.error?.message ?? 'No se pudo iniciar sesión.';
+        this.changeDetector.detectChanges();
       },
     });
   }
