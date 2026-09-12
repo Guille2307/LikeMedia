@@ -1,7 +1,7 @@
 <main class="admin-page">
   <header class="admin-header">
     <a class="admin-brand" href="/" aria-label="Volver a Like Media"><span class="admin-mark">✈</span><span>LIKE MEDIA <small>ADMIN</small></span></a>
-    @if (authenticated) { <button class="admin-logout" type="button" (click)="logout()">Cerrar sesión</button> }
+    @if (authenticated) { <div class="admin-session">{{ adminName }}</div><button class="admin-logout" type="button" (click)="logout()">Cerrar sesión</button> }
   </header>
 
   @if (!authenticated) {
