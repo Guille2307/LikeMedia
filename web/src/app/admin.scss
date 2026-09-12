@@ -14,6 +14,7 @@
 .compact-button { min-height: 36px; margin: 0; padding: 8px 12px; }
 .admin-button.compact-button { color: var(--paper); background: var(--violet); }
 .admin-success { margin: 0 0 14px; color: #39734f; font-size: 13px; font-weight: 700; }
+.admin-username { position: absolute !important; width: 1px !important; height: 1px !important; overflow: hidden !important; clip: rect(0 0 0 0) !important; clip-path: inset(50%) !important; white-space: nowrap !important; }
 .service-form { display: grid; gap: 12px; margin: 4px 0 20px; padding: 18px; border: 1px solid var(--line); background: var(--cream); }
 .form-title, .form-options { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
 .form-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px 14px; }
