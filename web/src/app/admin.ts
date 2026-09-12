@@ -19,7 +19,10 @@ function emptyService(): ServicePackage {
 })
 export class AdminApp implements OnInit {
   private readonly api = inject(ApiService);
-  token = '';
+  email = 'info@likemedia.es';
+  password = '';
+  private accessToken = '';
+  adminName = '';
   authenticated = false;
   loading = false;
   error = '';
@@ -35,13 +38,53 @@ export class AdminApp implements OnInit {
   serviceMessage = '';
 
   ngOnInit(): void {
-    const saved = sessionStorage.getItem('like-media-admin-token');
-    if (saved) { this.token = saved; this.load(); }
+    const saved = sessionStorage.getItem('like-media-admin-jwt');
+    if (saved) {
+      this.accessToken = saved;
+      this.loadOverview(saved);
+    }
   }
 
   load(): void {
-    const token = this.token.trim();
-    if (!token) { this.error = 'Introduce el token privado de administración.'; return; }
+    if (!this.authenticated) {
+      this.login();
+      return;
+    }
+    this.loadOverview();
+  }
+
+  login(): void {
+    const email = this.email.trim().toLowerCase();
+    if (!email || !this.password) {
+      this.error = 'Introduce tu correo y contraseña.';
+      return;
+    }
+    this.loading = true;
+    this.error = '';
+    this.api.loginAdmin({ email, password: this.password }).pipe(timeout({ first: 20_000 })).subscribe({
+      next: (response) => {
+        this.accessToken = response.accessToken;
+        this.adminName = response.user.name;
+        this.password = '';
+        sessionStorage.setItem('like-media-admin-jwt', response.accessToken);
+        this.loadOverview(response.accessToken);
+      },
+      error: (response: { status?: number; error?: { message?: string }; name?: string }) => {
+        this.loading = false;
+        if (response.status === 401) this.error = 'El correo o la contraseña no son válidos.';
+        else if (response.status === 503) this.error = 'El acceso por correo y contraseña aún no está configurado en el servidor.';
+        else if (response.name === 'TimeoutError') this.error = 'El servidor está tardando demasiado. Comprueba tu conexión y vuelve a intentarlo.';
+        else this.error = response.error?.message ?? 'No se pudo iniciar sesión.';
+      },
+    });
+  }
+
+  private loadOverview(token = this.accessToken.trim()): void {
+    if (!token) {
+      this.authenticated = false;
+      this.error = 'Inicia sesión para acceder al panel.';
+      return;
+    }
     this.loading = true;
     this.error = '';
     this.api.getAdminOverview(token).pipe(timeout({ first: 20_000 })).subscribe({
@@ -51,13 +94,17 @@ export class AdminApp implements OnInit {
         this.contacts = overview.recentContacts;
         this.authenticated = true;
         this.loading = false;
-        sessionStorage.setItem('like-media-admin-token', token);
+        this.accessToken = token;
+        sessionStorage.setItem('like-media-admin-jwt', token);
       },
       error: (response: { status?: number; error?: { message?: string }; name?: string }) => {
         this.loading = false;
         this.authenticated = false;
-        if (response.status === 401) this.error = 'El token no es válido.';
-        else if (response.status === 503) this.error = 'El panel aún no está activado en el servidor.';
+        if (response.status === 401) {
+          this.error = 'La sesión ha caducado. Vuelve a iniciar sesión.';
+          sessionStorage.removeItem('like-media-admin-jwt');
+          this.accessToken = '';
+        } else if (response.status === 503) this.error = 'El panel aún no está activado en el servidor.';
         else if (response.name === 'TimeoutError') this.error = 'El servidor está tardando demasiado. Comprueba tu conexión y vuelve a intentarlo.';
         else this.error = response.error?.message ?? 'No se pudo cargar el panel.';
       },
@@ -65,8 +112,10 @@ export class AdminApp implements OnInit {
   }
 
   logout(): void {
+    sessionStorage.removeItem('like-media-admin-jwt');
     sessionStorage.removeItem('like-media-admin-token');
-    this.token = '';
+    this.accessToken = '';
+    this.password = '';
     this.authenticated = false;
     this.overview = null;
     this.bookings = [];
@@ -119,8 +168,8 @@ export class AdminApp implements OnInit {
     this.serviceError = '';
     this.serviceMessage = '';
     const request = this.editingServiceId
-      ? this.api.updateAdminService(this.token, this.editingServiceId, payload)
-      : this.api.createAdminService(this.token, payload);
+      ? this.api.updateAdminService(this.accessToken, this.editingServiceId, payload)
+      : this.api.createAdminService(this.accessToken, payload);
     request.subscribe({
       next: () => {
         this.serviceSaving = false;
@@ -138,7 +187,7 @@ export class AdminApp implements OnInit {
   toggleService(service: ServicePackage): void {
     this.serviceSaving = true;
     this.serviceError = '';
-    this.api.updateAdminService(this.token, service.id, { ...service, active: service.active === false }).subscribe({
+    this.api.updateAdminService(this.accessToken, service.id, { ...service, active: service.active === false }).subscribe({
       next: () => { this.serviceSaving = false; this.serviceMessage = service.active === false ? 'Paquete activado.' : 'Paquete archivado.'; this.load(); },
       error: (response: { error?: { message?: string } }) => { this.serviceSaving = false; this.serviceError = response.error?.message ?? 'No se pudo cambiar el estado.'; },
     });
@@ -148,7 +197,7 @@ export class AdminApp implements OnInit {
     if (!window.confirm(`¿Eliminar «${service.title}»? Esta acción no se puede deshacer.`)) return;
     this.serviceSaving = true;
     this.serviceError = '';
-    this.api.deleteAdminService(this.token, service.id).subscribe({
+    this.api.deleteAdminService(this.accessToken, service.id).subscribe({
       next: () => { this.serviceSaving = false; this.serviceMessage = 'Paquete eliminado.'; this.load(); },
       error: (response: { error?: { message?: string } }) => { this.serviceSaving = false; this.serviceError = response.error?.message ?? 'No se pudo eliminar el paquete.'; },
     });

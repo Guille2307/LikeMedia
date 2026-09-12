@@ -1,10 +1,12 @@
 import { Body, Controller, Delete, Get, Headers, Param, Patch, Post } from '@nestjs/common';
 import { AppService } from './app.service.js';
 import type { BookingInput, ContactInput, ServicePackageInput } from './app.service.js';
+import { AuthService } from './auth.service.js';
+import type { AdminLoginInput } from './auth.service.js';
 
 @Controller()
 export class AppController {
-  constructor(private readonly appService: AppService) {}
+  constructor(private readonly appService: AppService, private readonly authService: AuthService) {}
 
   @Get()
   getHello(): Record<string, string> {
@@ -34,6 +36,11 @@ export class AppController {
   @Post('api/contact')
   async createContact(@Body() body: ContactInput) {
     return this.appService.createContact(body);
+  }
+
+  @Post('api/auth/login')
+  login(@Body() body: AdminLoginInput) {
+    return this.authService.login(body ?? {});
   }
 
   @Get('api/admin/overview')

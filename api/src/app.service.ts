@@ -3,6 +3,7 @@ import { timingSafeEqual } from 'node:crypto';
 import { DatabaseService } from './database.service.js';
 import { EmailService } from './email.service.js';
 import { CalendarService } from './calendar.service.js';
+import { AuthService } from './auth.service.js';
 
 export type ServiceCategory = 'Presencia' | 'Venta' | 'Soporte';
 
@@ -162,7 +163,7 @@ export class AppService {
   }));
   private readonly attempts = new Map<string, { count: number; resetAt: number }>();
 
-  constructor(private readonly database: DatabaseService, private readonly email: EmailService, private readonly calendar: CalendarService) {}
+  constructor(private readonly database: DatabaseService, private readonly email: EmailService, private readonly calendar: CalendarService, private readonly auth: AuthService) {}
 
   async getServices(includeInactive = false): Promise<ServicePackage[]> {
     const result = await this.database.query<{
@@ -229,9 +230,10 @@ export class AppService {
   }
 
   private requireAdmin(token?: string): void {
+    if (token && this.auth.isValidToken(token)) return;
     const configured = process.env.ADMIN_TOKEN?.trim();
-    if (!configured) throw new ServiceUnavailableException('El panel privado aún no está configurado.');
-    if (!token) throw new UnauthorizedException('Token de administración requerido.');
+    if (!configured && !this.auth.isConfigured()) throw new ServiceUnavailableException('El panel privado aún no está configurado.');
+    if (!configured || !token) throw new UnauthorizedException('Sesión de administración requerida.');
     const provided = Buffer.from(token);
     const expected = Buffer.from(configured);
     if (provided.length !== expected.length || !timingSafeEqual(provided, expected)) throw new UnauthorizedException('Token de administración no válido.');

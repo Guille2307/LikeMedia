@@ -9,10 +9,11 @@
       <p class="admin-eyebrow">ÁREA PRIVADA</p>
       <h1 id="admin-title">Panel de gestión</h1>
       <p>Consulta las reservas, mensajes y paquetes desde un espacio protegido.</p>
-      <form (ngSubmit)="load()">
-        <input class="admin-username" name="username" type="text" value="admin" autocomplete="username" tabindex="-1" aria-hidden="true">
-        <label for="admin-token">Token de administración</label>
-        <input id="admin-token" name="admin-token" type="password" [(ngModel)]="token" autocomplete="current-password" placeholder="Pega aquí ADMIN_TOKEN">
+      <form (ngSubmit)="login()">
+        <label for="admin-email">Correo de administración</label>
+        <input id="admin-email" name="admin-email" type="email" [(ngModel)]="email" autocomplete="username" placeholder="info@likemedia.es" required>
+        <label for="admin-password">Contraseña</label>
+        <input id="admin-password" name="admin-password" type="password" [(ngModel)]="password" autocomplete="current-password" placeholder="Tu contraseña" required>
         @if (error) { <p class="admin-error" role="alert">{{ error }}</p> }
         <button class="admin-button" type="submit" [disabled]="loading">{{ loading ? 'Comprobando…' : 'Entrar al panel' }}</button>
       </form>

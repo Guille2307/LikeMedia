@@ -34,6 +34,8 @@ export interface ContactResponse extends ContactRequest { id: string; status: st
 export interface AdminBooking { id: string; name: string; email: string; date: string; time: string; provider: string; meeting_url: string; created_at?: string; }
 export interface AdminContact { id: string; name: string; email: string; company: string; message: string; created_at?: string; }
 export interface AdminOverview { counts: { bookings: number; contacts: number; services: number }; recentBookings: AdminBooking[]; recentContacts: AdminContact[]; services: ServicePackage[]; }
+export interface AdminLoginRequest { email: string; password: string; }
+export interface AdminLoginResponse { accessToken: string; tokenType: 'Bearer'; expiresIn: number; user: { email: string; name: string; role: 'admin' }; }
 
 interface LikeMediaRuntimeConfig {
   __LIKE_MEDIA_API_URL__?: string;
@@ -58,6 +60,10 @@ export class ApiService {
 
   createContact(payload: ContactRequest): Observable<ContactResponse> {
     return this.http.post<ContactResponse>(`${this.baseUrl}/contact`, payload);
+  }
+
+  loginAdmin(payload: AdminLoginRequest): Observable<AdminLoginResponse> {
+    return this.http.post<AdminLoginResponse>(`${this.baseUrl}/auth/login`, payload);
   }
 
   getAdminOverview(token: string): Observable<AdminOverview> {
