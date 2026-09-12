@@ -17,6 +17,7 @@ export interface ServicePackage {
 }
 
 export interface BookingRequest { name: string; email: string; date: string; time: string; }
+export interface AvailabilityDay { date: string; times: string[]; }
 export interface BookingResponse extends BookingRequest {
   id: string;
   provider: string;
@@ -37,6 +38,10 @@ export class ApiService {
 
   getServices(): Observable<ServicePackage[]> {
     return this.http.get<ServicePackage[]>(`${this.baseUrl}/services`);
+  }
+
+  getAvailability(): Observable<AvailabilityDay[]> {
+    return this.http.get<AvailabilityDay[]>(`${this.baseUrl}/availability`);
   }
 
   createBooking(payload: BookingRequest): Observable<BookingResponse> {

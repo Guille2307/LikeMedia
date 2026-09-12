@@ -21,6 +21,11 @@ export class AppController {
     return this.appService.getServices();
   }
 
+  @Get('api/availability')
+  async getAvailability() {
+    return this.appService.getAvailability();
+  }
+
   @Post('api/bookings')
   async createBooking(@Body() body: BookingInput) {
     return this.appService.createBooking(body);

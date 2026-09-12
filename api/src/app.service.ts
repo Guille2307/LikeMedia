@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable, InternalServerErrorException } from '@nestjs/common';
+import { BadRequestException, ConflictException, Injectable, InternalServerErrorException } from '@nestjs/common';
 import { DatabaseService } from './database.service.js';
 import { EmailService } from './email.service.js';
 
@@ -20,6 +20,11 @@ export interface BookingInput {
   email?: string;
   date?: string;
   time?: string;
+}
+
+export interface AvailabilityDay {
+  date: string;
+  times: string[];
 }
 
 export interface ContactInput {
@@ -81,8 +86,18 @@ const SERVICES: ServicePackage[] = [
   },
 ];
 
-const AVAILABLE_DATES = ['sáb, 12 sept', 'dom, 13 sept', 'lun, 14 sept', 'mar, 15 sept', 'mié, 16 sept'];
 const AVAILABLE_TIMES = ['09:30', '11:00', '16:00'];
+
+function buildAvailability(): AvailabilityDay[] {
+  const formatter = new Intl.DateTimeFormat('es-ES', { weekday: 'short', day: 'numeric', month: 'short' });
+  const today = new Date();
+  return Array.from({ length: 5 }, (_, index) => {
+    const date = new Date(today);
+    date.setHours(12, 0, 0, 0);
+    date.setDate(today.getDate() + index);
+    return { date: formatter.format(date).replace(/\./g, ''), times: [...AVAILABLE_TIMES] };
+  });
+}
 
 @Injectable()
 export class AppService {
@@ -107,6 +122,17 @@ export class AppService {
     }));
   }
 
+  async getAvailability(): Promise<AvailabilityDay[]> {
+    const booked = new Set<string>();
+    const result = await this.database.query<{ date: string; time: string }>('SELECT date, time FROM bookings');
+    result?.rows.forEach((row) => booked.add(`${row.date}|${row.time}`));
+    this.bookings.forEach((booking) => booked.add(`${booking.date}|${booking.time}`));
+
+    return buildAvailability()
+      .map((slot) => ({ ...slot, times: slot.times.filter((time) => !booked.has(`${slot.date}|${time}`)) }))
+      .filter((slot) => slot.times.length > 0);
+  }
+
   private async seedServices(): Promise<void> {
     for (const service of SERVICES) {
       await this.database.query('INSERT INTO service_packages (id, category, eyebrow, title, price_usd, price_eur, description, includes, featured) VALUES ($1, $2, $3, $4, $5, $6, $7, $8::jsonb, $9) ON CONFLICT (id) DO NOTHING', [
@@ -128,8 +154,13 @@ export class AppService {
     if (!name || !email || !date || !time || !/^\S+@\S+\.\S+$/.test(email)) {
       throw new BadRequestException('Nombre, email, día y hora son obligatorios.');
     }
-    if (!AVAILABLE_DATES.includes(date) || !AVAILABLE_TIMES.includes(time)) {
+    const available = await this.getAvailability();
+    const selectedDay = available.find((slot) => slot.date === date);
+    if (!selectedDay || !selectedDay.times.includes(time)) {
       throw new BadRequestException('El día o la hora seleccionados no están disponibles.');
+    }
+    if (!this.database.isConnected && this.bookings.some((booking) => booking.date === date && booking.time === time)) {
+      throw new ConflictException('Ese horario acaba de reservarse. Elige otro, por favor.');
     }
     const id = `LM-${Date.now().toString(36).toUpperCase()}`;
     const room = `like-media-${id.toLowerCase()}`;
@@ -137,14 +168,17 @@ export class AppService {
     if (this.database.isConnected) {
       try {
         await this.database.query('INSERT INTO bookings (id, name, email, date, time, provider, meeting_url) VALUES ($1, $2, $3, $4, $5, $6, $7)', [id, name, email, date, time, booking.provider, booking.meetingUrl]);
-      } catch {
+      } catch (error) {
+        if (typeof error === 'object' && error !== null && 'code' in error && error.code === '23505') {
+          throw new ConflictException('Ese horario acaba de reservarse. Elige otro, por favor.');
+        }
         throw new InternalServerErrorException('No pudimos guardar la reserva.');
       }
     } else {
       this.bookings.push(booking);
     }
     await this.email.sendBooking(booking);
-    return { ...booking, message: 'Solicitud recibida. Te enviaremos la confirmación por email.' };
+    return { ...booking, message: 'Solicitud recibida. Revisa tu email: incluye la confirmación y la invitación de calendario.' };
   }
 
   async createContact(input: ContactInput): Promise<Record<string, string>> {

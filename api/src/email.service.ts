@@ -33,6 +33,13 @@ export class EmailService {
   isConfigured(): boolean { return Boolean(this.transporter); }
 
   async sendBooking(booking: BookingEmail): Promise<void> {
+    const calendarInvite = this.createCalendarInvite(booking);
+    const attachment = {
+      filename: 'like-media-videollamada.ics',
+      content: calendarInvite,
+      contentType: 'text/calendar; method=REQUEST',
+    };
+
     await this.send({
       to: this.recipient,
       replyTo: booking.email,
@@ -48,6 +55,7 @@ export class EmailService {
         '',
         `ID: ${booking.id}`,
       ].join('\n'),
+      attachments: [attachment],
     });
 
     await this.send({
@@ -63,6 +71,7 @@ export class EmailService {
         '',
         'Like Media',
       ].join('\n'),
+      attachments: [attachment],
     });
   }
 
@@ -97,7 +106,7 @@ export class EmailService {
     });
   }
 
-  private async send(message: { to: string; subject: string; text: string; replyTo?: string }): Promise<void> {
+  private async send(message: { to: string; subject: string; text: string; replyTo?: string; attachments?: Array<{ filename: string; content: string; contentType: string }> }): Promise<void> {
     if (!this.transporter) {
       this.logger.warn('Email no configurado: define SMTP_HOST, SMTP_USER y SMTP_PASS para activar notificaciones.');
       return;
@@ -108,5 +117,46 @@ export class EmailService {
     } catch (error) {
       this.logger.error(`No se pudo enviar el email "${message.subject}"`, error instanceof Error ? error.stack : undefined);
     }
+  }
+
+  private createCalendarInvite(booking: BookingEmail): string {
+    const monthNumbers: Record<string, number> = {
+      ene: 1, enero: 1, feb: 2, febrero: 2, mar: 3, marzo: 3, abr: 4, abril: 4,
+      may: 5, mayo: 5, jun: 6, junio: 6, jul: 7, julio: 7, ago: 8, agosto: 8,
+      sep: 9, sept: 9, septiembre: 9, oct: 10, octubre: 10, nov: 11, noviembre: 11,
+      dic: 12, diciembre: 12,
+    };
+    const match = /(?:^|,\s*)(\d{1,2})\s+([a-záéíóú]+)/i.exec(booking.date);
+    const day = match ? Number(match[1]) : new Date().getDate();
+    const month = match ? monthNumbers[match[2].toLowerCase()] ?? new Date().getMonth() + 1 : new Date().getMonth() + 1;
+    const year = new Date().getFullYear();
+    const [hour, minute] = booking.time.split(':').map(Number);
+    const endMinutes = hour * 60 + minute + 30;
+    const endHour = Math.floor(endMinutes / 60) % 24;
+    const endMinute = endMinutes % 60;
+    const localStamp = (y: number, m: number, d: number, h: number, min: number): string =>
+      `${String(y).padStart(4, '0')}${String(m).padStart(2, '0')}${String(d).padStart(2, '0')}T${String(h).padStart(2, '0')}${String(min).padStart(2, '0')}00`;
+    const utcStamp = (value: Date): string => value.toISOString().replace(/[-:]/g, '').replace(/\.\d{3}Z$/, 'Z');
+    const escape = (value: string): string => value.replace(/[\\;,]/g, '\\$&').replace(/\r?\n/g, '\\n');
+
+    return [
+      'BEGIN:VCALENDAR',
+      'VERSION:2.0',
+      'PRODID:-//Like Media//Videollamada//ES',
+      'CALSCALE:GREGORIAN',
+      'METHOD:REQUEST',
+      'BEGIN:VEVENT',
+      `UID:${escape(booking.id)}@likemedia.es`,
+      `DTSTAMP:${utcStamp(new Date())}`,
+      `DTSTART;TZID=Europe/Madrid:${localStamp(year, month, day, hour, minute)}`,
+      `DTEND;TZID=Europe/Madrid:${localStamp(year, month, day, endHour, endMinute)}`,
+      `SUMMARY:${escape('Videollamada con Like Media')}`,
+      `DESCRIPTION:${escape(`Reunión de 30 minutos. Entra aquí: ${booking.meetingUrl}`)}`,
+      `LOCATION:${escape(booking.meetingUrl)}`,
+      'STATUS:CONFIRMED',
+      'SEQUENCE:0',
+      'END:VEVENT',
+      'END:VCALENDAR',
+    ].join('\r\n') + '\r\n';
   }
 }

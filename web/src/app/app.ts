@@ -1,6 +1,6 @@
 import { AfterViewInit, Component, OnInit, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { ApiService, BookingResponse, ContactResponse, Currency, ServiceCategory, ServicePackage } from './api.service';
+import { ApiService, AvailabilityDay, BookingResponse, ContactResponse, Currency, ServiceCategory, ServicePackage } from './api.service';
 
 type FilterCategory = 'Todos' | ServiceCategory;
 
@@ -13,6 +13,14 @@ const LOCAL_SERVICES: ServicePackage[] = [
   { id: 'custom', category: 'Venta', eyebrow: '06 · SOLUCIÓN', title: 'Desarrollo a medida', price: { usd: '$2,000–2,500', eur: '€2,000–2,500' }, description: 'Software web construido alrededor de procesos, usuarios e integraciones específicas.', includes: ['Alcance funcional', 'Frontend y backend', 'APIs e integraciones', 'Panel administrativo'] },
   { id: 'basic-maintenance', category: 'Soporte', eyebrow: '07 · SOPORTE', title: 'Mantenimiento básico', price: { usd: '$30–50 / mes', eur: '€30–50 / mes' }, description: 'Continuidad técnica para mantener tu sitio actualizado después de publicar.', includes: ['Actualizaciones', 'Copias si el hosting lo permite', 'Incidencias menores', 'Cambios pequeños'] },
   { id: 'pro-maintenance', category: 'Soporte', eyebrow: '08 · SOPORTE', title: 'Mantenimiento Pro', price: { usd: '$70–120 / mes', eur: '€70–120 / mes' }, description: 'Más capacidad para cambios de contenido, productos y seguimiento técnico.', includes: ['Todo lo básico', 'Cambios de productos', 'Revisión de rendimiento', 'Atención prioritaria'] },
+];
+
+const LOCAL_AVAILABILITY: AvailabilityDay[] = [
+  { date: 'sáb, 12 sept', times: ['09:30', '11:00', '16:00'] },
+  { date: 'dom, 13 sept', times: ['09:30', '11:00', '16:00'] },
+  { date: 'lun, 14 sept', times: ['09:30', '11:00', '16:00'] },
+  { date: 'mar, 15 sept', times: ['09:30', '11:00', '16:00'] },
+  { date: 'mié, 16 sept', times: ['09:30', '11:00', '16:00'] },
 ];
 
 @Component({
@@ -29,6 +37,7 @@ export class App implements OnInit, AfterViewInit {
   readonly currency = signal<Currency>('USD');
   readonly category = signal<FilterCategory>('Todos');
   readonly services = signal<ServicePackage[]>(LOCAL_SERVICES);
+  readonly availability = signal<AvailabilityDay[]>(LOCAL_AVAILABILITY);
   readonly filteredServices = computed(() => {
     const selected = this.category();
     const visible = selected === 'Todos' ? [...this.services()] : this.services().filter((service) => service.category === selected);
@@ -41,14 +50,17 @@ export class App implements OnInit, AfterViewInit {
   readonly bookingError = signal('');
   readonly contactError = signal('');
 
-  readonly availableDates = ['sáb, 12 sept', 'dom, 13 sept', 'lun, 14 sept', 'mar, 15 sept', 'mié, 16 sept'];
-  readonly availableTimes = ['09:30', '11:00', '16:00'];
+  get availableDates(): string[] { return this.availability().map((slot) => slot.date); }
+  get availableTimes(): string[] {
+    return this.availability().find((slot) => slot.date === this.booking.date)?.times ?? this.availability()[0]?.times ?? [];
+  }
 
   booking = { name: '', email: '', date: '', time: '' };
   contact = { name: '', email: '', company: '', message: '' };
 
   ngOnInit(): void {
     this.api.getServices().subscribe({ next: (services) => this.services.set(services), error: () => undefined });
+    this.api.getAvailability().subscribe({ next: (availability) => this.availability.set(availability), error: () => undefined });
   }
 
   ngAfterViewInit(): void {
@@ -72,7 +84,10 @@ export class App implements OnInit, AfterViewInit {
     return this.currency() === 'USD' ? service.price.usd : service.price.eur;
   }
 
-  selectDate(date: string): void { this.booking.date = date; }
+  selectDate(date: string): void {
+    this.booking.date = date;
+    if (!this.availableTimes.includes(this.booking.time)) this.booking.time = '';
+  }
   selectTime(time: string): void { this.booking.time = time; }
   setCategory(category: FilterCategory): void {
     this.category.set(category);

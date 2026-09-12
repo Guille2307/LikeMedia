@@ -67,6 +67,8 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
         meeting_url TEXT NOT NULL,
         created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
       );
+      CREATE UNIQUE INDEX IF NOT EXISTS bookings_date_time_unique
+        ON bookings (date, time);
       CREATE TABLE IF NOT EXISTS contacts (
         id TEXT PRIMARY KEY,
         name TEXT NOT NULL,
