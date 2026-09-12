@@ -1,2 +1,1 @@
-/backend/* https://api-production-5c96.up.railway.app/api/:splat 200
-/* /index.html 200
+# Redirects are defined in netlify.toml.

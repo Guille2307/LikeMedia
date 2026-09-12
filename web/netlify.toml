@@ -2,8 +2,17 @@
   command = "npm run build"
   publish = "dist/web/browser"
 
+[functions]
+  directory = "netlify/functions"
+
 [build.environment]
   NODE_VERSION = "22"
+
+[[redirects]]
+  from = "/backend/*"
+  to = "/.netlify/functions/backend/:splat"
+  status = 200
+  force = true
 
 [[redirects]]
   from = "/*"
