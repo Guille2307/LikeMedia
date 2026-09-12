@@ -24,6 +24,7 @@ export interface BookingResponse extends BookingRequest {
   provider: string;
   meetingUrl: string;
   emailStatus: EmailDeliveryStatus;
+  calendarStatus?: 'created' | 'not_configured' | 'failed';
   message: string;
 }
 export interface ContactRequest { name: string; email: string; company: string; message: string; }

@@ -1,6 +1,7 @@
 import { BadRequestException, ConflictException, Injectable, InternalServerErrorException } from '@nestjs/common';
 import { DatabaseService } from './database.service.js';
 import { EmailService } from './email.service.js';
+import { CalendarService } from './calendar.service.js';
 
 export type ServiceCategory = 'Presencia' | 'Venta' | 'Soporte';
 
@@ -118,7 +119,7 @@ export class AppService {
   private readonly bookings: Array<Record<string, string>> = [];
   private readonly contacts: Array<Record<string, string>> = [];
 
-  constructor(private readonly database: DatabaseService, private readonly email: EmailService) {}
+  constructor(private readonly database: DatabaseService, private readonly email: EmailService, private readonly calendar: CalendarService) {}
 
   async getServices(): Promise<ServicePackage[]> {
     const result = await this.database.query<{
@@ -191,9 +192,11 @@ export class AppService {
     } else {
       this.bookings.push(booking);
     }
+    const calendarStatus = await this.calendar.createBookingEvent(booking);
     const delivery = await this.email.sendBooking(booking);
     return {
       ...booking,
+      calendarStatus,
       emailStatus: delivery.status,
       message: delivery.status === 'sent'
         ? 'Solicitud recibida y emails enviados. Revisa tu bandeja: incluye la confirmación y la invitación de calendario.'

@@ -30,6 +30,10 @@ Para activar PostgreSQL localmente, copia `api/.env.example` a `api/.env` y comp
 
 La implementación inicial usa **Jitsi Meet** como proveedor gratuito: al confirmar una cita la API genera una sala `meet.jit.si` sin coste de licencia ni cuenta obligatoria para el cliente. Para producción conviene evaluar Google Meet si se necesita una agenda de Google Workspace, o autoalojar Jitsi si se requiere control de datos.
 
+### Sincronización con Google Calendar
+
+La API puede crear automáticamente un evento de 30 minutos en Google Calendar y enviar la invitación al cliente. Para activarlo, crea una cuenta de servicio de Google, comparte con ella el calendario de reservas y define en Railway `GOOGLE_CALENDAR_ID` y `GOOGLE_SERVICE_ACCOUNT_JSON`. La reserva y el archivo `.ics` siguen funcionando aunque estas variables estén vacías.
+
 ## Producción pendiente
 
-Con `DATABASE_URL` configurada, la API crea las tablas `service_packages`, `bookings` y `contacts` al arrancar. Sin esa variable mantiene un fallback temporal en memoria para desarrollo. En el plan gratuito de Railway, usa Brevo por HTTPS: define `MAIL_PROVIDER=brevo`, `BREVO_API_KEY`, `BREVO_SENDER_EMAIL` y `BREVO_SENDER_NAME` en Railway, con el remitente verificado en Brevo. Cuando se habilite un plan de Railway con SMTP saliente, puedes cambiar `MAIL_PROVIDER=smtp` y utilizar las variables `SMTP_*`. Nunca guardes una API key o contraseña en Git. Sigue pendiente conectar un calendario real (Google Calendar/Cal.com/Calendly) y añadir un panel de gestión.
+Con `DATABASE_URL` configurada, la API crea las tablas `service_packages`, `bookings` y `contacts` al arrancar. Sin esa variable mantiene un fallback temporal en memoria para desarrollo. En el plan gratuito de Railway, usa Brevo por HTTPS: define `MAIL_PROVIDER=brevo`, `BREVO_API_KEY`, `BREVO_SENDER_EMAIL` y `BREVO_SENDER_NAME` en Railway, con el remitente verificado en Brevo. Cuando se habilite un plan de Railway con SMTP saliente, puedes cambiar `MAIL_PROVIDER=smtp` y utilizar las variables `SMTP_*`. Nunca guardes una API key o contraseña en Git. El siguiente bloque pendiente es añadir un panel de gestión.

@@ -8,15 +8,18 @@ describe('AppController', () => {
   beforeEach(async () => {
     const app: TestingModule = await Test.createTestingModule({
       controllers: [AppController],
-      providers: [AppService],
+      providers: [{
+        provide: AppService,
+        useValue: { getHello: () => ({ name: 'Like Media API', docs: '/api/health' }) },
+      }],
     }).compile();
 
     appController = app.get<AppController>(AppController);
   });
 
   describe('root', () => {
-    it('should return "Hello World!"', () => {
-      expect(appController.getHello()).toBe('Hello World!');
+    it('returns the API identity and health endpoint', () => {
+      expect(appController.getHello()).toEqual({ name: 'Like Media API', docs: '/api/health' });
     });
   });
 });
