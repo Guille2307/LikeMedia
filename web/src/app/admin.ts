@@ -24,6 +24,7 @@ export class AdminApp implements OnInit {
   private accessToken = '';
   adminName = '';
   authenticated = false;
+  sessionChecking = false;
   loading = false;
   error = '';
   overview: AdminOverview | null = null;
@@ -39,8 +40,10 @@ export class AdminApp implements OnInit {
 
   ngOnInit(): void {
     const saved = sessionStorage.getItem('like-media-admin-jwt');
+    this.adminName = sessionStorage.getItem('like-media-admin-name') ?? '';
     if (saved) {
       this.accessToken = saved;
+      this.sessionChecking = true;
       this.loadOverview(saved);
     }
   }
@@ -66,11 +69,14 @@ export class AdminApp implements OnInit {
         this.accessToken = response.accessToken;
         this.adminName = response.user.name;
         this.password = '';
+        this.sessionChecking = true;
         sessionStorage.setItem('like-media-admin-jwt', response.accessToken);
+        sessionStorage.setItem('like-media-admin-name', response.user.name);
         this.loadOverview(response.accessToken);
       },
       error: (response: { status?: number; error?: { message?: string }; name?: string }) => {
         this.loading = false;
+        this.sessionChecking = false;
         if (response.status === 401) this.error = 'El correo o la contraseña no son válidos.';
         else if (response.status === 503) this.error = 'El acceso por correo y contraseña aún no está configurado en el servidor.';
         else if (response.name === 'TimeoutError') this.error = 'El servidor está tardando demasiado. Comprueba tu conexión y vuelve a intentarlo.';
@@ -93,12 +99,14 @@ export class AdminApp implements OnInit {
         this.bookings = overview.recentBookings;
         this.contacts = overview.recentContacts;
         this.authenticated = true;
+        this.sessionChecking = false;
         this.loading = false;
         this.accessToken = token;
         sessionStorage.setItem('like-media-admin-jwt', token);
       },
       error: (response: { status?: number; error?: { message?: string }; name?: string }) => {
         this.loading = false;
+        this.sessionChecking = false;
         this.authenticated = false;
         if (response.status === 401) {
           this.error = 'La sesión ha caducado. Vuelve a iniciar sesión.';
@@ -113,10 +121,12 @@ export class AdminApp implements OnInit {
 
   logout(): void {
     sessionStorage.removeItem('like-media-admin-jwt');
+    sessionStorage.removeItem('like-media-admin-name');
     sessionStorage.removeItem('like-media-admin-token');
     this.accessToken = '';
     this.password = '';
     this.authenticated = false;
+    this.sessionChecking = false;
     this.overview = null;
     this.bookings = [];
     this.contacts = [];
