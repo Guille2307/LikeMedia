@@ -86,17 +86,31 @@ const SERVICES: ServicePackage[] = [
   },
 ];
 
-const AVAILABLE_TIMES = ['09:30', '11:00', '16:00'];
+// Citas de 30 minutos dentro de la jornada 15:00–20:00.
+// La última hora de inicio es 19:30 para que la llamada termine a las 20:00.
+const AVAILABLE_TIMES = Array.from({ length: 10 }, (_, index) => {
+  const minutes = 15 * 60 + index * 30;
+  return `${String(Math.floor(minutes / 60)).padStart(2, '0')}:${String(minutes % 60).padStart(2, '0')}`;
+});
 
 function buildAvailability(): AvailabilityDay[] {
-  const formatter = new Intl.DateTimeFormat('es-ES', { weekday: 'short', day: 'numeric', month: 'short' });
-  const today = new Date();
-  return Array.from({ length: 5 }, (_, index) => {
-    const date = new Date(today);
-    date.setHours(12, 0, 0, 0);
-    date.setDate(today.getDate() + index);
-    return { date: formatter.format(date).replace(/\./g, ''), times: [...AVAILABLE_TIMES] };
+  const formatter = new Intl.DateTimeFormat('es-ES', {
+    weekday: 'short', day: 'numeric', month: 'short', timeZone: 'Europe/Madrid',
   });
+  const today = new Date();
+  const baseDate = new Date(today);
+  baseDate.setHours(12, 0, 0, 0);
+  const availability: AvailabilityDay[] = [];
+
+  for (let offset = 0; availability.length < 5 && offset < 14; offset += 1) {
+    const date = new Date(baseDate);
+    date.setDate(baseDate.getDate() + offset);
+    const weekday = date.getDay();
+    if (weekday === 0 || weekday === 6) continue;
+    availability.push({ date: formatter.format(date).replace(/\./g, ''), times: [...AVAILABLE_TIMES] });
+  }
+
+  return availability;
 }
 
 @Injectable()

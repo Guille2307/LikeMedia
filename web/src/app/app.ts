@@ -15,13 +15,32 @@ const LOCAL_SERVICES: ServicePackage[] = [
   { id: 'pro-maintenance', category: 'Soporte', eyebrow: '08 · SOPORTE', title: 'Mantenimiento Pro', price: { usd: '$70–120 / mes', eur: '€70–120 / mes' }, description: 'Más capacidad para cambios de contenido, productos y seguimiento técnico.', includes: ['Todo lo básico', 'Cambios de productos', 'Revisión de rendimiento', 'Atención prioritaria'] },
 ];
 
-const LOCAL_AVAILABILITY: AvailabilityDay[] = [
-  { date: 'sáb, 12 sept', times: ['09:30', '11:00', '16:00'] },
-  { date: 'dom, 13 sept', times: ['09:30', '11:00', '16:00'] },
-  { date: 'lun, 14 sept', times: ['09:30', '11:00', '16:00'] },
-  { date: 'mar, 15 sept', times: ['09:30', '11:00', '16:00'] },
-  { date: 'mié, 16 sept', times: ['09:30', '11:00', '16:00'] },
-];
+// Fallback local alineado con la API: solo laborables, 15:00–20:00.
+const BOOKING_TIMES = Array.from({ length: 10 }, (_, index) => {
+  const minutes = 15 * 60 + index * 30;
+  return `${String(Math.floor(minutes / 60)).padStart(2, '0')}:${String(minutes % 60).padStart(2, '0')}`;
+});
+
+function buildLocalAvailability(): AvailabilityDay[] {
+  const formatter = new Intl.DateTimeFormat('es-ES', {
+    weekday: 'short', day: 'numeric', month: 'short', timeZone: 'Europe/Madrid',
+  });
+  const baseDate = new Date();
+  baseDate.setHours(12, 0, 0, 0);
+  const availability: AvailabilityDay[] = [];
+
+  for (let offset = 0; availability.length < 5 && offset < 14; offset += 1) {
+    const date = new Date(baseDate);
+    date.setDate(baseDate.getDate() + offset);
+    const weekday = date.getDay();
+    if (weekday === 0 || weekday === 6) continue;
+    availability.push({ date: formatter.format(date).replace(/\./g, ''), times: [...BOOKING_TIMES] });
+  }
+
+  return availability;
+}
+
+const LOCAL_AVAILABILITY = buildLocalAvailability();
 
 @Component({
   selector: 'app-root',
