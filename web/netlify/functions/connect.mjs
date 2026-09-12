@@ -10,8 +10,8 @@ const HOP_BY_HOP_HEADERS = new Set([
 export default async function handler(request) {
   const incoming = new URL(request.url);
   const upstreamPath = incoming.pathname
-    .replace(/^\/\.netlify\/functions\/backend/, '')
-    .replace(/^\/backend/, '') || '/';
+    .replace(/^\/\.netlify\/functions\/connect/, '')
+    .replace(/^\/connect/, '') || '/';
   const target = new URL(`/api${upstreamPath}`, API_ORIGIN);
   target.search = incoming.search;
 

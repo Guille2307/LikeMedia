@@ -47,7 +47,7 @@ export class ApiService {
   private readonly baseUrl = (
     (globalThis as LikeMediaRuntimeConfig).__LIKE_MEDIA_API_URL__
     ?? (typeof window !== 'undefined' && ['likemedia.es', 'www.likemedia.es'].includes(window.location.hostname)
-      ? '/backend'
+      ? '/connect'
       : 'http://localhost:3000/api')
   ).replace(/\/$/, '');
 

@@ -9,8 +9,8 @@
   NODE_VERSION = "22"
 
 [[redirects]]
-  from = "/backend/*"
-  to = "/.netlify/functions/backend/:splat"
+  from = "/connect/*"
+  to = "/.netlify/functions/connect/:splat"
   status = 200
   force = true
 
