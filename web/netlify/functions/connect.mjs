@@ -11,7 +11,8 @@ export default async function handler(request) {
   const incoming = new URL(request.url);
   const upstreamPath = incoming.pathname
     .replace(/^\/\.netlify\/functions\/connect/, '')
-    .replace(/^\/connect/, '') || '/';
+    .replace(/^\/connect/, '')
+    .replace(/^\/api/, '') || '/';
   const target = new URL(`/api${upstreamPath}`, API_ORIGIN);
   target.search = incoming.search;
 
@@ -27,12 +28,16 @@ export default async function handler(request) {
 
   try {
     const upstream = await fetch(target, init);
+    // Buffer the small JSON API response before returning it. Passing the
+    // upstream stream through directly can leave some browsers waiting for
+    // the stream to close even though Railway has already completed it.
+    const payload = await upstream.arrayBuffer();
     const responseHeaders = new Headers();
     for (const [name, value] of upstream.headers.entries()) {
       if (!HOP_BY_HOP_HEADERS.has(name.toLowerCase()) && name.toLowerCase() !== 'set-cookie') responseHeaders.set(name, value);
     }
     responseHeaders.set('Cache-Control', 'no-store');
-    return new Response(upstream.body, { status: upstream.status, headers: responseHeaders });
+    return new Response(payload, { status: upstream.status, headers: responseHeaders });
   } catch {
     return Response.json({ message: 'No se pudo conectar con el servidor.' }, { status: 502, headers: { 'Cache-Control': 'no-store' } });
   }

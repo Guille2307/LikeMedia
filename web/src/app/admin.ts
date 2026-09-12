@@ -26,6 +26,7 @@ export class AdminApp implements OnInit {
   authenticated = false;
   loading = false;
   error = '';
+  private loginAttempt = 0;
   overview: AdminOverview | null = null;
   bookings: AdminBooking[] = [];
   contacts: AdminContact[] = [];
@@ -60,8 +61,16 @@ export class AdminApp implements OnInit {
     }
     this.loading = true;
     this.error = '';
+    const attempt = ++this.loginAttempt;
+    const watchdog = window.setTimeout(() => {
+      if (this.loginAttempt !== attempt || !this.loading) return;
+      this.loading = false;
+      this.error = 'No se pudo conectar con el servidor. Revisa la conexión e inténtalo de nuevo.';
+    }, 12_000);
     this.api.loginAdmin({ email, password: this.password }).pipe(timeout({ first: 20_000 })).subscribe({
       next: (response) => {
+        window.clearTimeout(watchdog);
+        if (this.loginAttempt !== attempt) return;
         this.accessToken = response.accessToken;
         this.adminName = response.user.name;
         this.password = '';
@@ -74,6 +83,8 @@ export class AdminApp implements OnInit {
         sessionStorage.setItem('like-media-admin-name', response.user.name);
       },
       error: (response: { status?: number; error?: { message?: string }; name?: string }) => {
+        window.clearTimeout(watchdog);
+        if (this.loginAttempt !== attempt) return;
         this.loading = false;
         if (response.status === 401) this.error = 'El correo o la contraseña no son válidos.';
         else if (response.status === 503) this.error = 'El acceso por correo y contraseña aún no está configurado en el servidor.';
