@@ -1,4 +1,5 @@
-import { BadRequestException, ConflictException, Injectable, InternalServerErrorException } from '@nestjs/common';
+import { BadRequestException, ConflictException, HttpException, HttpStatus, Injectable, InternalServerErrorException, ServiceUnavailableException, UnauthorizedException } from '@nestjs/common';
+import { timingSafeEqual } from 'node:crypto';
 import { DatabaseService } from './database.service.js';
 import { EmailService } from './email.service.js';
 import { CalendarService } from './calendar.service.js';
@@ -33,6 +34,26 @@ export interface ContactInput {
   email?: string;
   company?: string;
   message?: string;
+}
+
+export interface AdminBooking {
+  id: string;
+  name: string;
+  email: string;
+  date: string;
+  time: string;
+  provider: string;
+  meeting_url: string;
+  created_at?: string;
+}
+
+export interface AdminContact {
+  id: string;
+  name: string;
+  email: string;
+  company: string;
+  message: string;
+  created_at?: string;
 }
 
 const SERVICES: ServicePackage[] = [
@@ -118,6 +139,7 @@ function buildAvailability(): AvailabilityDay[] {
 export class AppService {
   private readonly bookings: Array<Record<string, string>> = [];
   private readonly contacts: Array<Record<string, string>> = [];
+  private readonly attempts = new Map<string, { count: number; resetAt: number }>();
 
   constructor(private readonly database: DatabaseService, private readonly email: EmailService, private readonly calendar: CalendarService) {}
 
@@ -161,7 +183,62 @@ export class AppService {
     return { status: 'ok', service: 'like-media-api', version: '0.1.0', database: this.database.status };
   }
 
+  private checkSubmission(input: BookingInput | ContactInput, kind: 'booking' | 'contact'): void {
+    if ((input as { website?: string }).website?.trim()) throw new BadRequestException('No pudimos procesar la solicitud.');
+    const email = input.email?.trim().toLowerCase() ?? 'unknown';
+    const key = `${kind}:${email}`;
+    const now = Date.now();
+    const current = this.attempts.get(key);
+    if (!current || current.resetAt <= now) {
+      this.attempts.set(key, { count: 1, resetAt: now + 10 * 60 * 1000 });
+      return;
+    }
+    if (current.count >= 5) throw new HttpException('Has alcanzado el límite temporal de solicitudes. Inténtalo de nuevo más tarde.', HttpStatus.TOO_MANY_REQUESTS);
+    current.count += 1;
+  }
+
+  private validateLengths(input: BookingInput | ContactInput): void {
+    const company = 'company' in input ? input.company : undefined;
+    const message = 'message' in input ? input.message : undefined;
+    if ((input.name?.trim().length ?? 0) > 120 || (input.email?.trim().length ?? 0) > 254 || (company?.trim().length ?? 0) > 160 || (message?.trim().length ?? 0) > 4000) {
+      throw new BadRequestException('Algunos campos superan el tamaño permitido.');
+    }
+  }
+
+  private requireAdmin(token?: string): void {
+    const configured = process.env.ADMIN_TOKEN?.trim();
+    if (!configured) throw new ServiceUnavailableException('El panel privado aún no está configurado.');
+    if (!token) throw new UnauthorizedException('Token de administración requerido.');
+    const provided = Buffer.from(token);
+    const expected = Buffer.from(configured);
+    if (provided.length !== expected.length || !timingSafeEqual(provided, expected)) throw new UnauthorizedException('Token de administración no válido.');
+  }
+
+  async getAdminOverview(token?: string): Promise<Record<string, unknown>> {
+    this.requireAdmin(token);
+    const [bookings, contacts, services] = await Promise.all([
+      this.getAdminBookings(token), this.getAdminContacts(token), this.getServices(),
+    ]);
+    return { counts: { bookings: bookings.length, contacts: contacts.length, services: services.length }, recentBookings: bookings.slice(0, 8), recentContacts: contacts.slice(0, 8), services };
+  }
+
+  async getAdminBookings(token?: string): Promise<AdminBooking[]> {
+    this.requireAdmin(token);
+    const result = await this.database.query<AdminBooking>('SELECT id, name, email, date, time, provider, meeting_url, created_at FROM bookings ORDER BY created_at DESC LIMIT 100');
+    if (result) return result.rows;
+    return [...this.bookings].reverse().map((booking) => ({ ...booking, meeting_url: booking.meetingUrl } as AdminBooking));
+  }
+
+  async getAdminContacts(token?: string): Promise<AdminContact[]> {
+    this.requireAdmin(token);
+    const result = await this.database.query<AdminContact>('SELECT id, name, email, company, message, created_at FROM contacts ORDER BY created_at DESC LIMIT 100');
+    if (result) return result.rows;
+    return [...this.contacts].reverse() as unknown as AdminContact[];
+  }
+
   async createBooking(input: BookingInput): Promise<Record<string, string>> {
+    this.validateLengths(input);
+    this.checkSubmission(input, 'booking');
     const name = input.name?.trim();
     const email = input.email?.trim();
     const date = input.date?.trim();
@@ -209,6 +286,8 @@ export class AppService {
   }
 
   async createContact(input: ContactInput): Promise<Record<string, string>> {
+    this.validateLengths(input);
+    this.checkSubmission(input, 'contact');
     const name = input.name?.trim();
     const email = input.email?.trim();
     const message = input.message?.trim();

@@ -34,6 +34,10 @@ La implementación inicial usa **Jitsi Meet** como proveedor gratuito: al confir
 
 La API puede crear automáticamente un evento de 30 minutos en Google Calendar y enviar la invitación al cliente. Para activarlo, crea una cuenta de servicio de Google, comparte con ella el calendario de reservas y define en Railway `GOOGLE_CALENDAR_ID` y `GOOGLE_SERVICE_ACCOUNT_JSON`. La reserva y el archivo `.ics` siguen funcionando aunque estas variables estén vacías.
 
-## Producción pendiente
+## Producción y panel privado
 
-Con `DATABASE_URL` configurada, la API crea las tablas `service_packages`, `bookings` y `contacts` al arrancar. Sin esa variable mantiene un fallback temporal en memoria para desarrollo. En el plan gratuito de Railway, usa Brevo por HTTPS: define `MAIL_PROVIDER=brevo`, `BREVO_API_KEY`, `BREVO_SENDER_EMAIL` y `BREVO_SENDER_NAME` en Railway, con el remitente verificado en Brevo. Cuando se habilite un plan de Railway con SMTP saliente, puedes cambiar `MAIL_PROVIDER=smtp` y utilizar las variables `SMTP_*`. Nunca guardes una API key o contraseña en Git. El siguiente bloque pendiente es añadir un panel de gestión.
+Con `DATABASE_URL` configurada, la API crea las tablas `service_packages`, `bookings` y `contacts` al arrancar. Sin esa variable mantiene un fallback temporal en memoria para desarrollo. En el plan gratuito de Railway, usa Brevo por HTTPS: define `MAIL_PROVIDER=brevo`, `BREVO_API_KEY`, `BREVO_SENDER_EMAIL` y `BREVO_SENDER_NAME` en Railway, con el remitente verificado en Brevo. Cuando se habilite un plan de Railway con SMTP saliente, puedes cambiar `MAIL_PROVIDER=smtp` y utilizar las variables `SMTP_*`. Nunca guardes una API key o contraseña en Git.
+
+La ruta `/admin` contiene un panel privado para consultar reservas, mensajes y paquetes publicados. Actívalo definiendo en Railway una variable `ADMIN_TOKEN` larga y aleatoria (solo en Variables, nunca en el repositorio). El token se introduce en la pantalla y se conserva únicamente en `sessionStorage` del navegador. La API aplica además un honeypot y un límite temporal de cinco envíos por email para reducir spam.
+
+Antes de cada publicación, ejecuta `npm run build:api` y `npm run build:web` desde la raíz. Las claves locales, archivos `.env` y credenciales de Google están incluidos en `.gitignore` y no deben copiarse al repositorio.

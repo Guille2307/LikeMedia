@@ -1,0 +1,33 @@
+<main class="admin-page">
+  <header class="admin-header">
+    <a class="admin-brand" href="/" aria-label="Volver a Like Media"><span class="admin-mark">✈</span><span>LIKE MEDIA <small>ADMIN</small></span></a>
+    @if (authenticated) { <button class="admin-logout" type="button" (click)="logout()">Cerrar sesión</button> }
+  </header>
+
+  @if (!authenticated) {
+    <section class="admin-login" aria-labelledby="admin-title">
+      <p class="admin-eyebrow">ÁREA PRIVADA</p>
+      <h1 id="admin-title">Panel de gestión</h1>
+      <p>Consulta las reservas, mensajes y paquetes desde un espacio protegido.</p>
+      <form (ngSubmit)="load()">
+        <label for="admin-token">Token de administración</label>
+        <input id="admin-token" name="admin-token" type="password" [(ngModel)]="token" autocomplete="current-password" placeholder="Pega aquí ADMIN_TOKEN">
+        @if (error) { <p class="admin-error" role="alert">{{ error }}</p> }
+        <button class="admin-button" type="submit" [disabled]="loading">{{ loading ? 'Comprobando…' : 'Entrar al panel' }}</button>
+      </form>
+      <a href="/" class="admin-back">← Volver a la web pública</a>
+    </section>
+  } @else {
+    <section class="admin-content">
+      <div class="admin-intro"><div><p class="admin-eyebrow">VISIÓN GENERAL</p><h1>Actividad de Like Media</h1></div><button class="admin-refresh" type="button" (click)="load()" [disabled]="loading">{{ loading ? 'Actualizando…' : 'Actualizar' }}</button></div>
+      @if (overview; as data) {
+        <div class="admin-stats"><article><span>Reservas</span><strong>{{ data.counts.bookings }}</strong></article><article><span>Mensajes</span><strong>{{ data.counts.contacts }}</strong></article><article><span>Paquetes</span><strong>{{ data.counts.services }}</strong></article></div>
+        <div class="admin-grid">
+          <section class="admin-card"><div class="card-heading"><h2>Reservas recientes</h2><span>{{ bookings.length }}</span></div>@if (bookings.length) {<div class="admin-list">@for (booking of bookings; track booking.id) {<article class="admin-row"><div><strong>{{ booking.name }}</strong><small>{{ booking.email }}</small></div><div><b>{{ booking.date }} · {{ booking.time }}</b><small>{{ booking.provider }}</small></div><a [href]="booking.meeting_url" target="_blank" rel="noreferrer">Abrir sala ↗</a></article>}</div>} @else {<p class="empty-state">Todavía no hay reservas.</p>}</section>
+          <section class="admin-card"><div class="card-heading"><h2>Mensajes recientes</h2><span>{{ contacts.length }}</span></div>@if (contacts.length) {<div class="admin-list">@for (contact of contacts; track contact.id) {<article class="admin-row contact-row"><div><strong>{{ contact.name }}</strong><small>{{ contact.email }}{{ contact.company ? ' · ' + contact.company : '' }}</small></div><p>{{ contact.message }}</p><a [href]="'mailto:' + contact.email">Responder ↗</a></article>}</div>} @else {<p class="empty-state">Todavía no hay mensajes.</p>}</section>
+        </div>
+        <section class="admin-card packages-card"><div class="card-heading"><h2>Paquetes publicados</h2><span>{{ data.services.length }}</span></div><div class="package-grid">@for (service of data.services; track service.id) {<article><small>{{ service.eyebrow }}</small><h3>{{ service.title }}</h3><p>{{ service.price.usd }} · {{ service.price.eur }}</p></article>}</div></section>
+      }
+    </section>
+  }
+</main>

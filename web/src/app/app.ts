@@ -74,8 +74,8 @@ export class App implements OnInit, AfterViewInit {
     return this.availability().find((slot) => slot.date === this.booking.date)?.times ?? this.availability()[0]?.times ?? [];
   }
 
-  booking = { name: '', email: '', date: '', time: '' };
-  contact = { name: '', email: '', company: '', message: '' };
+  booking = { name: '', email: '', date: '', time: '', website: '' };
+  contact = { name: '', email: '', company: '', message: '', website: '' };
 
   ngOnInit(): void {
     this.api.getServices().subscribe({ next: (services) => this.services.set(services), error: () => undefined });

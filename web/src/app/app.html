@@ -111,6 +111,7 @@
         <div class="form-success" [class.form-warning]="response.emailStatus !== 'sent'"><span class="success-mark">{{ response.emailStatus === 'sent' ? '✓' : '!' }}</span><h3>Solicitud recibida</h3><p>{{ response.message }}</p><p><strong>{{ response.date }} · {{ response.time }}</strong></p><a class="button button-primary" [href]="response.meetingUrl" target="_blank" rel="noreferrer">Abrir sala Jitsi <span>↗</span></a><button type="button" class="text-link reset-button" (click)="bookingStatus.set('idle')">Reservar otra fecha</button></div>
       } @else {
         <form class="booking-form" (ngSubmit)="submitBooking()">
+          <label class="honeypot" aria-hidden="true">Website<input tabindex="-1" autocomplete="off" [(ngModel)]="booking.website" name="booking-website"></label>
           <label>Tu nombre<input required [(ngModel)]="booking.name" name="booking-name" placeholder="Nombre y apellido"></label>
           <label>Tu email<input required type="email" [(ngModel)]="booking.email" name="booking-email" placeholder="hola@tuempresa.com"></label>
           <fieldset><legend>Elige un día</legend><div class="date-options">@for (date of availableDates; track date) {<button type="button" class="date-option" [class.selected]="booking.date === date" (click)="selectDate(date)">{{ date }}</button>}</div></fieldset>
