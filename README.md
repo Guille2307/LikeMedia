@@ -40,4 +40,8 @@ Con `DATABASE_URL` configurada, la API crea las tablas `service_packages`, `book
 
 La ruta `/admin` contiene un panel privado para consultar reservas, mensajes y paquetes publicados. Desde **Paquetes y servicios** puedes crear, editar, archivar/activar y eliminar paquetes; los cambios se guardan en PostgreSQL y el catálogo público solo muestra los activos. Actívalo definiendo en Railway una variable `ADMIN_TOKEN` larga y aleatoria (solo en Variables, nunca en el repositorio). El token se introduce en la pantalla y se conserva únicamente en `sessionStorage` del navegador. La API aplica además un honeypot y un límite temporal de cinco envíos por email para reducir spam.
 
+## Bloque legal
+
+La web incluye `/legal/aviso-legal`, `/legal/privacidad`, `/legal/cookies` y `/legal/terminos`, además de un banner de consentimiento con aceptar, rechazar y configurar. El responsable indicado es **Dysmar Vidal · 77461330-K** y `info@likemedia.es`. Antes de presentar la web como cumplimiento legal definitivo, el titular debe completar el domicilio y revisar la situación fiscal, retención y plazos de conservación con un profesional. La política no activa analítica ni publicidad actualmente; cualquier herramienta futura deberá integrarse detrás del consentimiento correspondiente.
+
 Antes de cada publicación, ejecuta `npm run build:api` y `npm run build:web` desde la raíz. Las claves locales, archivos `.env` y credenciales de Google están incluidos en `.gitignore` y no deben copiarse al repositorio.
