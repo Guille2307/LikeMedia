@@ -3,6 +3,7 @@ import { FormsModule } from '@angular/forms';
 import { ApiService, AvailabilityDay, BookingResponse, ContactResponse, Currency, ServiceCategory, ServicePackage } from './api.service';
 
 type FilterCategory = 'Todos' | ServiceCategory;
+type CookieConsent = 'unknown' | 'accepted' | 'rejected';
 
 const LOCAL_SERVICES: ServicePackage[] = [
   { id: 'landing', category: 'Presencia', eyebrow: '01 · PRESENCIA', title: 'Landing Page', price: { usd: '$200–300', eur: '€200–300' }, description: 'Una página enfocada en una campaña, servicio o captación de contactos.', includes: ['Responsive', 'WhatsApp y formulario', 'SEO básico', 'Analítica inicial'] },
@@ -68,16 +69,21 @@ export class App implements OnInit, AfterViewInit {
   readonly contactResponse = signal<ContactResponse | null>(null);
   readonly bookingError = signal('');
   readonly contactError = signal('');
+  readonly cookieConsent = signal<CookieConsent>('unknown');
+  readonly cookiePreferencesOpen = signal(false);
+  readonly cookieAnalytics = signal(false);
 
   get availableDates(): string[] { return this.availability().map((slot) => slot.date); }
   get availableTimes(): string[] {
     return this.availability().find((slot) => slot.date === this.booking.date)?.times ?? this.availability()[0]?.times ?? [];
   }
 
-  booking = { name: '', email: '', date: '', time: '', website: '' };
-  contact = { name: '', email: '', company: '', message: '', website: '' };
+  booking = { name: '', email: '', date: '', time: '', website: '', privacyAccepted: false };
+  contact = { name: '', email: '', company: '', message: '', website: '', privacyAccepted: false };
 
   ngOnInit(): void {
+    const consent = localStorage.getItem('like-media-cookie-consent');
+    if (consent === 'accepted' || consent === 'rejected') this.cookieConsent.set(consent);
     this.api.getServices().subscribe({ next: (services) => this.services.set(services), error: () => undefined });
     this.api.getAvailability().subscribe({ next: (availability) => this.availability.set(availability), error: () => undefined });
   }
@@ -140,6 +146,11 @@ export class App implements OnInit, AfterViewInit {
       this.bookingStatus.set('error');
       return;
     }
+    if (!this.booking.privacyAccepted) {
+      this.bookingError.set('Acepta la política de privacidad para continuar.');
+      this.bookingStatus.set('error');
+      return;
+    }
     this.bookingStatus.set('loading');
     this.bookingError.set('');
     this.api.createBooking(this.booking).subscribe({
@@ -157,6 +168,11 @@ export class App implements OnInit, AfterViewInit {
       this.contactStatus.set('error');
       return;
     }
+    if (!this.contact.privacyAccepted) {
+      this.contactError.set('Acepta la política de privacidad para continuar.');
+      this.contactStatus.set('error');
+      return;
+    }
     this.contactStatus.set('loading');
     this.contactError.set('');
     this.api.createContact(this.contact).subscribe({
@@ -166,5 +182,34 @@ export class App implements OnInit, AfterViewInit {
         this.contactStatus.set('error');
       },
     });
+  }
+
+  acceptAllCookies(): void {
+    this.cookieAnalytics.set(true);
+    this.saveCookieChoice('accepted');
+  }
+
+  rejectOptionalCookies(): void {
+    this.cookieAnalytics.set(false);
+    this.saveCookieChoice('rejected');
+  }
+
+  openCookiePreferences(): void {
+    this.cookiePreferencesOpen.set(true);
+  }
+
+  manageCookiePreferences(): void {
+    this.cookieConsent.set('unknown');
+    this.cookiePreferencesOpen.set(true);
+  }
+
+  saveCookiePreferences(): void {
+    this.saveCookieChoice(this.cookieAnalytics() ? 'accepted' : 'rejected');
+  }
+
+  private saveCookieChoice(choice: Exclude<CookieConsent, 'unknown'>): void {
+    localStorage.setItem('like-media-cookie-consent', choice);
+    this.cookieConsent.set(choice);
+    this.cookiePreferencesOpen.set(false);
   }
 }

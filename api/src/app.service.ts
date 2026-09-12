@@ -35,6 +35,7 @@ export interface BookingInput {
   email?: string;
   date?: string;
   time?: string;
+  privacyAccepted?: boolean;
 }
 
 export interface AvailabilityDay {
@@ -47,6 +48,7 @@ export interface ContactInput {
   email?: string;
   company?: string;
   message?: string;
+  privacyAccepted?: boolean;
 }
 
 export interface AdminBooking {
@@ -335,6 +337,7 @@ export class AppService {
     if (!name || !email || !date || !time || !/^\S+@\S+\.\S+$/.test(email)) {
       throw new BadRequestException('Nombre, email, día y hora son obligatorios.');
     }
+    if (input.privacyAccepted !== true) throw new BadRequestException('Debes aceptar la política de privacidad.');
     const available = await this.getAvailability();
     const selectedDay = available.find((slot) => slot.date === date);
     if (!selectedDay || !selectedDay.times.includes(time)) {
@@ -383,6 +386,7 @@ export class AppService {
     if (!name || !email || !message || !/^\S+@\S+\.\S+$/.test(email)) {
       throw new BadRequestException('Nombre, email y mensaje son obligatorios.');
     }
+    if (input.privacyAccepted !== true) throw new BadRequestException('Debes aceptar la política de privacidad.');
     const contact = {
       id: `MSG-${Date.now().toString(36).toUpperCase()}`,
       name,

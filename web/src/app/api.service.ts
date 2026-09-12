@@ -18,7 +18,7 @@ export interface ServicePackage {
   active?: boolean;
 }
 
-export interface BookingRequest { name: string; email: string; date: string; time: string; website?: string; }
+export interface BookingRequest { name: string; email: string; date: string; time: string; website?: string; privacyAccepted?: boolean; }
 export interface AvailabilityDay { date: string; times: string[]; }
 export interface BookingResponse extends BookingRequest {
   id: string;
@@ -28,7 +28,7 @@ export interface BookingResponse extends BookingRequest {
   calendarStatus?: 'created' | 'not_configured' | 'failed';
   message: string;
 }
-export interface ContactRequest { name: string; email: string; company: string; message: string; website?: string; }
+export interface ContactRequest { name: string; email: string; company: string; message: string; website?: string; privacyAccepted?: boolean; }
 export interface ContactResponse extends ContactRequest { id: string; status: string; emailStatus: EmailDeliveryStatus; message: string; }
 
 export interface AdminBooking { id: string; name: string; email: string; date: string; time: string; provider: string; meeting_url: string; created_at?: string; }

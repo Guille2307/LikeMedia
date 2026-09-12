@@ -1,0 +1,67 @@
+<main class="legal-page">
+  <header class="legal-header">
+    <a class="legal-brand" href="/" aria-label="Volver a Like Media"><span class="legal-mark">✈</span><span>LIKE MEDIA</span></a>
+    <a class="legal-back" href="/">Volver a la web <span>↗</span></a>
+  </header>
+
+  <div class="legal-shell">
+    <aside class="legal-nav" aria-label="Información legal">
+      <p class="legal-eyebrow">INFORMACIÓN LEGAL</p>
+      <a [class.active]="page === 'aviso-legal'" href="/legal/aviso-legal">Aviso legal</a>
+      <a [class.active]="page === 'privacidad'" href="/legal/privacidad">Privacidad</a>
+      <a [class.active]="page === 'cookies'" href="/legal/cookies">Cookies</a>
+      <a [class.active]="page === 'terminos'" href="/legal/terminos">Condiciones</a>
+    </aside>
+
+    <article class="legal-content">
+      @if (page === 'aviso-legal') {
+        <p class="legal-eyebrow">AVISO LEGAL</p>
+        <h1>Información del sitio</h1>
+        <p class="legal-lede">Este sitio web pertenece a <strong>Like Media</strong>, proyecto profesional de <strong>Dysmar Vidal</strong>.</p>
+        <section><h2>1. Titular</h2><dl><div><dt>Titular</dt><dd>Dysmar Vidal</dd></div><div><dt>Documento de identidad</dt><dd>77461330-K</dd></div><div><dt>Actividad / marca</dt><dd>Like Media · Agencia digital</dd></div><div><dt>Correo electrónico</dt><dd><a href="mailto:info@likemedia.es">info@likemedia.es</a></dd></div><div><dt>Sitio web</dt><dd><a href="https://likemedia.es">https://likemedia.es</a></dd></div><div><dt>Domicilio</dt><dd class="pending">Pendiente de completar por el titular</dd></div></dl></section>
+        <section><h2>2. Objeto</h2><p>El sitio informa sobre servicios de diseño web, comercio electrónico, soluciones digitales, análisis de datos y servicios relacionados. Las tarifas mostradas son orientativas; el alcance, impuestos y costes de terceros se concretan en la propuesta aceptada.</p></section>
+        <section><h2>3. Responsabilidad</h2><p>El titular procura que la información sea clara y esté actualizada, pero no garantiza la disponibilidad permanente del sitio ni la ausencia de errores. Los enlaces a servicios de terceros se ofrecen como referencia y se rigen por sus propias condiciones.</p></section>
+        <section><h2>4. Propiedad intelectual</h2><p>Los textos, logotipos, imágenes, diseño y código de este sitio están protegidos por la normativa aplicable. No se permite su reproducción, distribución o transformación sin autorización, salvo los usos permitidos legalmente.</p></section>
+        <section><h2>5. Contacto y reclamaciones</h2><p>Para cualquier consulta sobre el sitio puedes escribir a <a href="mailto:info@likemedia.es">info@likemedia.es</a>. El titular atenderá las comunicaciones recibidas por medios electrónicos.</p></section>
+      }
+
+      @if (page === 'privacidad') {
+        <p class="legal-eyebrow">POLÍTICA DE PRIVACIDAD</p>
+        <h1>Tus datos, con claridad.</h1>
+        <p class="legal-lede">Esta información explica qué datos recibimos cuando nos escribes o reservas una videollamada y cómo los utilizamos.</p>
+        <section><h2>1. Responsable</h2><p><strong>Dysmar Vidal</strong> · Documento: <strong>77461330-K</strong> · Like Media<br>Correo: <a href="mailto:info@likemedia.es">info@likemedia.es</a><br>Domicilio: <span class="pending">pendiente de completar por el titular</span></p></section>
+        <section><h2>2. Datos que podemos tratar</h2><ul><li>Nombre y dirección de correo.</li><li>Empresa o proyecto y el contenido del mensaje.</li><li>Fecha y hora elegidas para una videollamada.</li><li>Datos técnicos mínimos necesarios para seguridad y funcionamiento.</li></ul></section>
+        <section><h2>3. Finalidades y bases</h2><ul><li><strong>Responder consultas y preparar propuestas:</strong> medidas precontractuales o solicitud del interesado.</li><li><strong>Gestionar reservas:</strong> ejecución de la solicitud, creación de la sala Jitsi y, si se activa, coordinación de calendario.</li><li><strong>Enviar confirmaciones:</strong> ejecución de la solicitud y comunicaciones estrictamente relacionadas con ella.</li><li><strong>Seguridad y prevención del abuso:</strong> interés legítimo y cumplimiento de obligaciones aplicables.</li></ul><p>No usamos los formularios para enviar publicidad sin una base válida y separada.</p></section>
+        <section><h2>4. Destinatarios y encargados</h2><p>Para prestar el servicio podemos utilizar proveedores tecnológicos como Brevo (correo transaccional), Railway/PostgreSQL (infraestructura y base de datos), Netlify (alojamiento web), Jitsi Meet (videollamadas) y, si se activa, Google Calendar. Se utilizarán únicamente en la medida necesaria y conforme a sus condiciones y garantías aplicables.</p></section>
+        <section><h2>5. Conservación</h2><p>Conservaremos los datos durante el tiempo necesario para atender la solicitud y, después, durante los plazos exigidos para responsabilidades legales. Las reservas y mensajes se mantienen en el sistema de gestión mientras sean necesarios para la relación profesional.</p></section>
+        <section><h2>6. Derechos</h2><p>Puedes solicitar acceso, rectificación, supresión, oposición, limitación, portabilidad y no ser objeto de decisiones individualizadas escribiendo a <a href="mailto:info@likemedia.es">info@likemedia.es</a>. La solicitud es gratuita; responderemos en los plazos previstos por la normativa. También puedes reclamar ante la <a href="https://www.aepd.es" target="_blank" rel="noreferrer">Agencia Española de Protección de Datos</a>.</p></section>
+        <section><h2>7. Seguridad</h2><p>Aplicamos medidas técnicas y organizativas razonables, como acceso administrativo protegido, límites contra envíos abusivos y conexiones cifradas. Ningún sistema conectado a internet puede garantizar seguridad absoluta.</p></section>
+      }
+
+      @if (page === 'cookies') {
+        <p class="legal-eyebrow">POLÍTICA DE COOKIES</p>
+        <h1>Una experiencia sin sorpresas.</h1>
+        <p class="legal-lede">Te informamos de forma separada sobre las cookies y tecnologías similares que puede utilizar Like Media.</p>
+        <section><h2>1. Situación actual</h2><p>En la versión actual no instalamos cookies de analítica, publicidad ni perfiles. La web puede utilizar almacenamiento local o de sesión del navegador para recordar preferencias y mantener el acceso temporal al área privada. Estas funciones no se usan para publicidad.</p></section>
+        <section><h2>2. Cookies técnicas</h2><p>Las tecnologías estrictamente necesarias para mostrar el sitio, proteger formularios o mantener una sesión solicitada por el usuario pueden funcionar sin consentimiento cuando resulten imprescindibles para el servicio.</p></section>
+        <section><h2>3. Preferencias</h2><p>El aviso inicial ofrece aceptar, rechazar o configurar las cookies no esenciales con opciones visibles al mismo nivel. Puedes cambiar tu elección desde el enlace «Preferencias de cookies» del pie de página. Si en el futuro incorporamos analítica o publicidad, actualizaremos esta política y pediremos consentimiento antes de activarlas.</p></section>
+        <section><h2>4. Gestión desde el navegador</h2><p>También puedes borrar o bloquear el almacenamiento desde la configuración de tu navegador. Algunas funciones podrían dejar de funcionar si deshabilitas tecnologías estrictamente necesarias.</p></section>
+        <section><h2>5. Más información</h2><p>Para dudas sobre privacidad o cookies, escribe a <a href="mailto:info@likemedia.es">info@likemedia.es</a>. Última actualización: {{ updatedAt }}.</p></section>
+      }
+
+      @if (page === 'terminos') {
+        <p class="legal-eyebrow">CONDICIONES DE SERVICIO</p>
+        <h1>Trabajemos con un alcance claro.</h1>
+        <p class="legal-lede">Estas condiciones orientan la contratación de los servicios publicados en Like Media. Cada proyecto se concreta en una propuesta y aceptación independientes.</p>
+        <section><h2>1. Servicios y propuesta</h2><p>Los paquetes del catálogo son referencias comerciales. La propuesta aceptada definirá entregables, número de páginas o productos, integraciones, calendario, responsabilidades, revisiones, precio e impuestos.</p></section>
+        <section><h2>2. Precio y costes externos</h2><p>Los precios se expresan en USD o EUR según la versión consultada y pueden no incluir impuestos. Dominio, hosting, licencias, contenidos, servicios de terceros y comisiones de pago se presupuestan aparte salvo que la propuesta indique lo contrario.</p></section>
+        <section><h2>3. Inicio y entrega</h2><p>Como condición comercial propuesta, el proyecto puede organizarse con un 50&nbsp;% al inicio y un 50&nbsp;% antes de la entrega final. Esta condición solo será aplicable si aparece expresamente en la propuesta aceptada.</p></section>
+        <section><h2>4. Materiales del cliente</h2><p>El cliente debe facilitar contenidos, accesos y autorizaciones necesarios. Responderá de contar con derechos suficientes sobre logotipos, fotografías, textos y demás materiales que entregue.</p></section>
+        <section><h2>5. Cambios y soporte</h2><p>Los cambios incluidos y el soporte posterior serán los descritos en la propuesta. Peticiones fuera de alcance podrán requerir una nueva cotización.</p></section>
+        <section><h2>6. Contratación</h2><p>Para contratar o resolver dudas, escribe a <a href="mailto:info@likemedia.es">info@likemedia.es</a>. La contratación definitiva se produce cuando ambas partes aceptan la propuesta y sus condiciones.</p></section>
+      }
+
+      <p class="legal-updated">Última actualización: {{ updatedAt }} · <a href="mailto:info@likemedia.es">info@likemedia.es</a></p>
+    </article>
+  </div>
+</main>

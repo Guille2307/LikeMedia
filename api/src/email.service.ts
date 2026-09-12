@@ -3,7 +3,7 @@ import nodemailer from 'nodemailer';
 import type { Transporter } from 'nodemailer';
 import type { BookingInput, ContactInput } from './app.service.js';
 
-interface BookingEmail extends Required<BookingInput> {
+interface BookingEmail extends Required<Omit<BookingInput, 'privacyAccepted'>> {
   id: string;
   provider: string;
   meetingUrl: string;
@@ -97,7 +97,7 @@ export class EmailService {
     return this.result(ownerSent, visitorSent);
   }
 
-  async sendContact(contact: Required<ContactInput> & { id: string }): Promise<EmailDeliveryResult> {
+  async sendContact(contact: Required<Omit<ContactInput, 'privacyAccepted'>> & { id: string }): Promise<EmailDeliveryResult> {
     const [ownerSent, visitorSent] = await Promise.all([
       this.send({
         to: this.recipient,
