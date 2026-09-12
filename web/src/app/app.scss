@@ -41,6 +41,10 @@ button { cursor: pointer; }
   50% { transform: rotate(-7deg) scale(1.04); }
 }
 
+@keyframes buttonSpin {
+  to { transform: rotate(360deg); }
+}
+
 .site-nav { position: sticky; top: 0; z-index: 10; display: flex; align-items: center; justify-content: space-between; min-height: 76px; padding: 16px 32px; border-bottom: 1px solid rgba(243,235,221,.22); background: var(--ink); }
 .brand { display: inline-flex; align-items: center; }
 .brand-logo { display: block; width: 140px; height: 38px; overflow: hidden; }
@@ -63,6 +67,7 @@ h1 { max-width: 560px; margin: 20px 0 0; color: var(--ink); font-size: clamp(52p
 .button:hover { transform: translateY(-2px); }
 .button:disabled { cursor: wait; opacity: .58; transform: none; }
 .button span, .text-link span, .service-link span { margin-left: 8px; }
+.button-spinner { width: 15px; height: 15px; margin: 0 10px 0 0 !important; border: 2px solid currentColor; border-right-color: transparent; border-radius: 50%; animation: buttonSpin .7s linear infinite; }
 .button-primary { color: var(--paper); background: var(--violet); }
 .button-primary:hover { background: var(--ink); }
 .button-quiet { color: var(--ink); border-color: var(--taupe); background: transparent; }
