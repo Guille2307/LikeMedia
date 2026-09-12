@@ -177,8 +177,18 @@ export class AppService {
     } else {
       this.bookings.push(booking);
     }
-    await this.email.sendBooking(booking);
-    return { ...booking, message: 'Solicitud recibida. Revisa tu email: incluye la confirmación y la invitación de calendario.' };
+    const delivery = await this.email.sendBooking(booking);
+    return {
+      ...booking,
+      emailStatus: delivery.status,
+      message: delivery.status === 'sent'
+        ? 'Solicitud recibida y emails enviados. Revisa tu bandeja: incluye la confirmación y la invitación de calendario.'
+        : delivery.status === 'partial'
+          ? 'La solicitud quedó guardada, pero solo se entregó uno de los emails. Te contactaremos mientras revisamos el envío.'
+          : delivery.status === 'not_configured'
+            ? 'La solicitud quedó guardada, pero el correo todavía no está configurado. Te contactaremos desde Like Media.'
+            : 'La solicitud quedó guardada, pero no pudimos enviar el correo. Te contactaremos desde Like Media.',
+    };
   }
 
   async createContact(input: ContactInput): Promise<Record<string, string>> {
@@ -204,7 +214,18 @@ export class AppService {
     } else {
       this.contacts.push(contact);
     }
-    await this.email.sendContact(contact);
-    return { ...contact, status: 'received', message: 'Mensaje recibido. Te responderemos pronto.' };
+    const delivery = await this.email.sendContact(contact);
+    return {
+      ...contact,
+      status: 'received',
+      emailStatus: delivery.status,
+      message: delivery.status === 'sent'
+        ? 'Mensaje enviado correctamente. Te hemos enviado una confirmación por email.'
+        : delivery.status === 'partial'
+          ? 'Mensaje guardado, pero solo se entregó uno de los emails. Te responderemos pronto.'
+          : delivery.status === 'not_configured'
+            ? 'Mensaje guardado, pero el correo todavía no está configurado. Te responderemos pronto.'
+            : 'Mensaje guardado, pero no pudimos enviar el correo. Te responderemos pronto.',
+    };
   }
 }

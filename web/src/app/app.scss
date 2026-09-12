@@ -164,6 +164,8 @@ legend { margin-bottom: 10px; }
 .form-success { display: grid; justify-items: start; gap: 13px; min-height: 420px; align-content: center; padding: 38px; border: 1px solid var(--violet); background: var(--lavender); }
 .form-success.compact { min-height: 260px; margin-top: 28px; }
 .success-mark { display: grid; width: 42px; height: 42px; place-items: center; border-radius: 50%; color: var(--paper); background: var(--violet); font-weight: 800; }
+.form-success.form-warning { border-color: #b18d63; background: #fbf3e7; }
+.form-success.form-warning .success-mark { background: #b18d63; }
 .form-success h3 { margin: 0; font-size: 28px; font-weight: 400; }
 .form-success p { max-width: 420px; margin: 0; color: var(--ink-soft); font-size: 14px; line-height: 1.5; }
 .reset-button { color: var(--violet); }

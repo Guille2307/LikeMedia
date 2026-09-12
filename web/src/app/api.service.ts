@@ -4,6 +4,7 @@ import { Observable } from 'rxjs';
 
 export type ServiceCategory = 'Presencia' | 'Venta' | 'Soporte';
 export type Currency = 'USD' | 'EUR';
+export type EmailDeliveryStatus = 'sent' | 'partial' | 'failed' | 'not_configured';
 
 export interface ServicePackage {
   id: string;
@@ -22,10 +23,11 @@ export interface BookingResponse extends BookingRequest {
   id: string;
   provider: string;
   meetingUrl: string;
+  emailStatus: EmailDeliveryStatus;
   message: string;
 }
 export interface ContactRequest { name: string; email: string; company: string; message: string; }
-export interface ContactResponse extends ContactRequest { id: string; status: string; message: string; }
+export interface ContactResponse extends ContactRequest { id: string; status: string; emailStatus: EmailDeliveryStatus; message: string; }
 
 interface LikeMediaRuntimeConfig {
   __LIKE_MEDIA_API_URL__?: string;
