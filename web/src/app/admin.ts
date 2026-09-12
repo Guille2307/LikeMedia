@@ -115,6 +115,7 @@ export class AdminApp implements OnInit {
         this.loading = false;
         this.accessToken = token;
         sessionStorage.setItem('like-media-admin-jwt', token);
+        this.changeDetector.detectChanges();
       },
       error: (response: { status?: number; error?: { message?: string }; name?: string }) => {
         this.loading = false;
@@ -126,6 +127,7 @@ export class AdminApp implements OnInit {
         } else if (response.status === 503) this.error = 'El panel aún no está activado en el servidor.';
         else if (response.name === 'TimeoutError') this.error = 'El servidor está tardando demasiado. Comprueba tu conexión y vuelve a intentarlo.';
         else this.error = response.error?.message ?? 'No se pudo cargar el panel.';
+        this.changeDetector.detectChanges();
       },
     });
   }
@@ -195,11 +197,13 @@ export class AdminApp implements OnInit {
         this.serviceSaving = false;
         this.serviceMessage = this.editingServiceId ? 'Paquete actualizado.' : 'Paquete creado y publicado.';
         this.cancelServiceEdit();
+        this.changeDetector.detectChanges();
         this.load();
       },
       error: (response: { error?: { message?: string } }) => {
         this.serviceSaving = false;
         this.serviceError = response.error?.message ?? 'No se pudo guardar el paquete.';
+        this.changeDetector.detectChanges();
       },
     });
   }
@@ -208,8 +212,8 @@ export class AdminApp implements OnInit {
     this.serviceSaving = true;
     this.serviceError = '';
     this.api.updateAdminService(this.accessToken, service.id, { ...service, active: service.active === false }).subscribe({
-      next: () => { this.serviceSaving = false; this.serviceMessage = service.active === false ? 'Paquete activado.' : 'Paquete archivado.'; this.load(); },
-      error: (response: { error?: { message?: string } }) => { this.serviceSaving = false; this.serviceError = response.error?.message ?? 'No se pudo cambiar el estado.'; },
+      next: () => { this.serviceSaving = false; this.serviceMessage = service.active === false ? 'Paquete activado.' : 'Paquete archivado.'; this.changeDetector.detectChanges(); this.load(); },
+      error: (response: { error?: { message?: string } }) => { this.serviceSaving = false; this.serviceError = response.error?.message ?? 'No se pudo cambiar el estado.'; this.changeDetector.detectChanges(); },
     });
   }
 
@@ -218,8 +222,8 @@ export class AdminApp implements OnInit {
     this.serviceSaving = true;
     this.serviceError = '';
     this.api.deleteAdminService(this.accessToken, service.id).subscribe({
-      next: () => { this.serviceSaving = false; this.serviceMessage = 'Paquete eliminado.'; this.load(); },
-      error: (response: { error?: { message?: string } }) => { this.serviceSaving = false; this.serviceError = response.error?.message ?? 'No se pudo eliminar el paquete.'; },
+      next: () => { this.serviceSaving = false; this.serviceMessage = 'Paquete eliminado.'; this.changeDetector.detectChanges(); this.load(); },
+      error: (response: { error?: { message?: string } }) => { this.serviceSaving = false; this.serviceError = response.error?.message ?? 'No se pudo eliminar el paquete.'; this.changeDetector.detectChanges(); },
     });
   }
 
