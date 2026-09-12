@@ -57,7 +57,7 @@ button { cursor: pointer; }
 
 .hero { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 72px; align-items: center; min-height: 690px; padding: 72px 0 94px; }
 .hero-copy { min-width: 0; }
-.hero-signature { margin: 18px 0 0; color: var(--taupe); font-family: Georgia, 'Times New Roman', serif; font-size: clamp(32px, 4vw, 46px); font-style: italic; line-height: 1; transform: rotate(-3deg); transform-origin: left center; }
+.hero-signature { margin: 18px 0 0; color: var(--taupe); font-family: 'Billion Dreams', cursive; font-size: clamp(38px, 4.6vw, 54px); font-weight: 400; line-height: .92; transform: rotate(-3deg); transform-origin: left center; }
 h1, h2, h3, p { margin-top: 0; }
 h1 { max-width: 560px; margin: 20px 0 0; color: var(--ink); font-size: clamp(52px, 6.2vw, 70px); font-weight: 800; letter-spacing: -.055em; line-height: .95; }
 .hero-lede { max-width: 480px; margin: 28px 0 0; color: var(--ink-soft); font-size: 20px; line-height: 1.45; }
