@@ -4,7 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { AdminBooking, AdminContact, AdminOverview, ApiService } from './api.service';
 
 @Component({
-  selector: 'app-admin',
+  selector: 'app-root',
   imports: [CommonModule, FormsModule],
   templateUrl: './admin.html',
   styleUrl: './admin.scss',
