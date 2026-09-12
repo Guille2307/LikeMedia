@@ -23,13 +23,16 @@ const LOCAL_SERVICES: ServicePackage[] = [
 })
 export class App implements OnInit, AfterViewInit {
   private readonly api = inject(ApiService);
+  private revealObserver?: IntersectionObserver;
+  private revealSequence = 0;
 
   readonly currency = signal<Currency>('USD');
   readonly category = signal<FilterCategory>('Todos');
   readonly services = signal<ServicePackage[]>(LOCAL_SERVICES);
   readonly filteredServices = computed(() => {
     const selected = this.category();
-    return selected === 'Todos' ? this.services() : this.services().filter((service) => service.category === selected);
+    const visible = selected === 'Todos' ? [...this.services()] : this.services().filter((service) => service.category === selected);
+    return visible.sort((a, b) => this.serviceNumber(a) - this.serviceNumber(b) || a.id.localeCompare(b.id));
   });
   readonly bookingStatus = signal<'idle' | 'loading' | 'success' | 'error'>('idle');
   readonly contactStatus = signal<'idle' | 'loading' | 'success' | 'error'>('idle');
@@ -49,26 +52,20 @@ export class App implements OnInit, AfterViewInit {
   }
 
   ngAfterViewInit(): void {
-    const revealItems = Array.from(document.querySelectorAll<HTMLElement>('[data-reveal]'));
-    if (!revealItems.length) return;
-
     if (typeof IntersectionObserver === 'undefined') {
-      revealItems.forEach((item) => item.classList.add('is-visible'));
+      document.querySelectorAll<HTMLElement>('[data-reveal]').forEach((item) => item.classList.add('is-visible'));
       return;
     }
 
-    const observer = new IntersectionObserver((entries) => {
+    this.revealObserver = new IntersectionObserver((entries) => {
       entries.forEach((entry) => {
         if (!entry.isIntersecting) return;
         (entry.target as HTMLElement).classList.add('is-visible');
-        observer.unobserve(entry.target);
+        this.revealObserver?.unobserve(entry.target);
       });
     }, { threshold: 0.14, rootMargin: '0px 0px -7% 0px' });
 
-    revealItems.forEach((item, index) => {
-      item.style.setProperty('--reveal-delay', `${Math.min(index * 45, 360)}ms`);
-      observer.observe(item);
-    });
+    this.observeRevealItems();
   }
 
   priceFor(service: ServicePackage): string {
@@ -77,8 +74,31 @@ export class App implements OnInit, AfterViewInit {
 
   selectDate(date: string): void { this.booking.date = date; }
   selectTime(time: string): void { this.booking.time = time; }
-  setCategory(category: FilterCategory): void { this.category.set(category); }
+  setCategory(category: FilterCategory): void {
+    this.category.set(category);
+    setTimeout(() => this.observeRevealItems(), 0);
+  }
   setCurrency(currency: Currency): void { this.currency.set(currency); }
+
+  private serviceNumber(service: ServicePackage): number {
+    const match = /^(\d+)/.exec(service.eyebrow);
+    return match ? Number(match[1]) : Number.MAX_SAFE_INTEGER;
+  }
+
+  private observeRevealItems(): void {
+    const revealItems = Array.from(document.querySelectorAll<HTMLElement>('[data-reveal]:not(.is-visible)'));
+    if (!this.revealObserver) {
+      revealItems.forEach((item) => item.classList.add('is-visible'));
+      return;
+    }
+    revealItems.forEach((item) => {
+      if (!item.dataset['revealObserved']) {
+        item.style.setProperty('--reveal-delay', `${Math.min(this.revealSequence++ * 45, 360)}ms`);
+        item.dataset['revealObserved'] = 'true';
+        this.revealObserver?.observe(item);
+      }
+    });
+  }
 
   submitBooking(): void {
     if (!this.booking.name || !this.booking.email || !this.booking.date || !this.booking.time) {

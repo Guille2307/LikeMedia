@@ -94,7 +94,7 @@ export class AppService {
     const result = await this.database.query<{
       id: string; category: ServiceCategory; eyebrow: string; title: string;
       price_usd: string; price_eur: string; description: string; includes: string[]; featured: boolean;
-    }>('SELECT id, category, eyebrow, title, price_usd, price_eur, description, includes, featured FROM service_packages ORDER BY id');
+    }>('SELECT id, category, eyebrow, title, price_usd, price_eur, description, includes, featured FROM service_packages ORDER BY CAST(SUBSTRING(eyebrow FROM \'^[0-9]+\') AS INTEGER), id');
     if (!result?.rows.length) {
       if (this.database.isConnected) await this.seedServices();
       return SERVICES;
