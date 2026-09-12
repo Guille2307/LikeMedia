@@ -1,6 +1,6 @@
-import { Body, Controller, Get, Headers, Post } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Headers, Param, Patch, Post } from '@nestjs/common';
 import { AppService } from './app.service.js';
-import type { BookingInput, ContactInput } from './app.service.js';
+import type { BookingInput, ContactInput, ServicePackageInput } from './app.service.js';
 
 @Controller()
 export class AppController {
@@ -49,6 +49,21 @@ export class AppController {
   @Get('api/admin/contacts')
   async getAdminContacts(@Headers('authorization') authorization?: string) {
     return this.appService.getAdminContacts(this.adminToken(authorization));
+  }
+
+  @Post('api/admin/services')
+  async createAdminService(@Headers('authorization') authorization: string | undefined, @Body() body: ServicePackageInput) {
+    return this.appService.createAdminService(this.adminToken(authorization), body);
+  }
+
+  @Patch('api/admin/services/:id')
+  async updateAdminService(@Headers('authorization') authorization: string | undefined, @Param('id') id: string, @Body() body: ServicePackageInput) {
+    return this.appService.updateAdminService(this.adminToken(authorization), id, body);
+  }
+
+  @Delete('api/admin/services/:id')
+  async deleteAdminService(@Headers('authorization') authorization: string | undefined, @Param('id') id: string) {
+    return this.appService.deleteAdminService(this.adminToken(authorization), id);
   }
 
   private adminToken(authorization?: string): string | undefined {

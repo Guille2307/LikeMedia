@@ -1,4 +1,4 @@
-import { BadRequestException, ConflictException, HttpException, HttpStatus, Injectable, InternalServerErrorException, ServiceUnavailableException, UnauthorizedException } from '@nestjs/common';
+import { BadRequestException, ConflictException, HttpException, HttpStatus, Injectable, InternalServerErrorException, NotFoundException, ServiceUnavailableException, UnauthorizedException } from '@nestjs/common';
 import { timingSafeEqual } from 'node:crypto';
 import { DatabaseService } from './database.service.js';
 import { EmailService } from './email.service.js';
@@ -15,6 +15,19 @@ export interface ServicePackage {
   description: string;
   includes: string[];
   featured?: boolean;
+  active?: boolean;
+}
+
+export interface ServicePackageInput {
+  id?: string;
+  category?: ServiceCategory;
+  eyebrow?: string;
+  title?: string;
+  price?: { usd?: string; eur?: string };
+  description?: string;
+  includes?: string[];
+  featured?: boolean;
+  active?: boolean;
 }
 
 export interface BookingInput {
@@ -139,23 +152,31 @@ function buildAvailability(): AvailabilityDay[] {
 export class AppService {
   private readonly bookings: Array<Record<string, string>> = [];
   private readonly contacts: Array<Record<string, string>> = [];
+  private readonly services: ServicePackage[] = SERVICES.map((service) => ({
+    ...service,
+    price: { ...service.price },
+    includes: [...service.includes],
+    active: true,
+  }));
   private readonly attempts = new Map<string, { count: number; resetAt: number }>();
 
   constructor(private readonly database: DatabaseService, private readonly email: EmailService, private readonly calendar: CalendarService) {}
 
-  async getServices(): Promise<ServicePackage[]> {
+  async getServices(includeInactive = false): Promise<ServicePackage[]> {
     const result = await this.database.query<{
       id: string; category: ServiceCategory; eyebrow: string; title: string;
-      price_usd: string; price_eur: string; description: string; includes: string[]; featured: boolean;
-    }>('SELECT id, category, eyebrow, title, price_usd, price_eur, description, includes, featured FROM service_packages ORDER BY CAST(SUBSTRING(eyebrow FROM \'^[0-9]+\') AS INTEGER), id');
+      price_usd: string; price_eur: string; description: string; includes: string[]; featured: boolean; active: boolean;
+    }>(`SELECT id, category, eyebrow, title, price_usd, price_eur, description, includes, featured, active
+       FROM service_packages ${includeInactive ? '' : 'WHERE active = TRUE'}
+       ORDER BY COALESCE(NULLIF(SUBSTRING(eyebrow FROM '^[0-9]+'), ''), '999999')::INTEGER, id`);
     if (!result?.rows.length) {
       if (this.database.isConnected) await this.seedServices();
-      return SERVICES;
+      return this.services.filter((service) => includeInactive || service.active !== false);
     }
     return result.rows.map((row) => ({
       id: row.id, category: row.category, eyebrow: row.eyebrow, title: row.title,
       price: { usd: row.price_usd, eur: row.price_eur }, description: row.description,
-      includes: row.includes, featured: row.featured,
+      includes: Array.isArray(row.includes) ? row.includes : [], featured: row.featured, active: row.active,
     }));
   }
 
@@ -171,10 +192,10 @@ export class AppService {
   }
 
   private async seedServices(): Promise<void> {
-    for (const service of SERVICES) {
-      await this.database.query('INSERT INTO service_packages (id, category, eyebrow, title, price_usd, price_eur, description, includes, featured) VALUES ($1, $2, $3, $4, $5, $6, $7, $8::jsonb, $9) ON CONFLICT (id) DO NOTHING', [
+    for (const service of this.services) {
+      await this.database.query('INSERT INTO service_packages (id, category, eyebrow, title, price_usd, price_eur, description, includes, featured, active) VALUES ($1, $2, $3, $4, $5, $6, $7, $8::jsonb, $9, $10) ON CONFLICT (id) DO NOTHING', [
         service.id, service.category, service.eyebrow, service.title, service.price.usd, service.price.eur,
-        service.description, JSON.stringify(service.includes), service.featured ?? false,
+        service.description, JSON.stringify(service.includes), service.featured ?? false, service.active !== false,
       ]);
     }
   }
@@ -217,7 +238,7 @@ export class AppService {
   async getAdminOverview(token?: string): Promise<Record<string, unknown>> {
     this.requireAdmin(token);
     const [bookings, contacts, services] = await Promise.all([
-      this.getAdminBookings(token), this.getAdminContacts(token), this.getServices(),
+      this.getAdminBookings(token), this.getAdminContacts(token), this.getServices(true),
     ]);
     return { counts: { bookings: bookings.length, contacts: contacts.length, services: services.length }, recentBookings: bookings.slice(0, 8), recentContacts: contacts.slice(0, 8), services };
   }
@@ -234,6 +255,74 @@ export class AppService {
     const result = await this.database.query<AdminContact>('SELECT id, name, email, company, message, created_at FROM contacts ORDER BY created_at DESC LIMIT 100');
     if (result) return result.rows;
     return [...this.contacts].reverse() as unknown as AdminContact[];
+  }
+
+  async createAdminService(token: string | undefined, input: ServicePackageInput): Promise<ServicePackage> {
+    this.requireAdmin(token);
+    const service = this.normalizeServiceInput(input);
+    const existing = await this.database.query<{ id: string }>('SELECT id FROM service_packages WHERE id = $1', [service.id]);
+    if (existing?.rows.length || this.services.some((item) => item.id === service.id)) {
+      throw new ConflictException('Ya existe un paquete con ese identificador.');
+    }
+    if (this.database.isConnected) {
+      await this.database.query('INSERT INTO service_packages (id, category, eyebrow, title, price_usd, price_eur, description, includes, featured, active) VALUES ($1, $2, $3, $4, $5, $6, $7, $8::jsonb, $9, $10)', [
+        service.id, service.category, service.eyebrow, service.title, service.price.usd, service.price.eur,
+        service.description, JSON.stringify(service.includes), service.featured ?? false, service.active !== false,
+      ]);
+    }
+    this.services.push(service);
+    return service;
+  }
+
+  async updateAdminService(token: string | undefined, id: string, input: ServicePackageInput): Promise<ServicePackage> {
+    this.requireAdmin(token);
+    const current = (await this.getServices(true)).find((service) => service.id === id);
+    if (!current) throw new NotFoundException('No encontramos ese paquete.');
+    const service = this.normalizeServiceInput({ ...current, ...input, id });
+    if (this.database.isConnected) {
+      await this.database.query('UPDATE service_packages SET category = $2, eyebrow = $3, title = $4, price_usd = $5, price_eur = $6, description = $7, includes = $8::jsonb, featured = $9, active = $10 WHERE id = $1', [
+        id, service.category, service.eyebrow, service.title, service.price.usd, service.price.eur,
+        service.description, JSON.stringify(service.includes), service.featured ?? false, service.active !== false,
+      ]);
+    }
+    const index = this.services.findIndex((item) => item.id === id);
+    if (index >= 0) this.services[index] = service;
+    return service;
+  }
+
+  async deleteAdminService(token: string | undefined, id: string): Promise<{ id: string }> {
+    this.requireAdmin(token);
+    const exists = (await this.getServices(true)).some((service) => service.id === id);
+    if (!exists) throw new NotFoundException('No encontramos ese paquete.');
+    if (this.database.isConnected) await this.database.query('DELETE FROM service_packages WHERE id = $1', [id]);
+    const index = this.services.findIndex((item) => item.id === id);
+    if (index >= 0) this.services.splice(index, 1);
+    return { id };
+  }
+
+  private normalizeServiceInput(input: ServicePackageInput): ServicePackage {
+    const id = (input.id?.trim() || this.slugify(input.title ?? '')).toLowerCase();
+    const category = input.category;
+    const eyebrow = input.eyebrow?.trim();
+    const title = input.title?.trim();
+    const usd = input.price?.usd?.trim();
+    const eur = input.price?.eur?.trim();
+    const description = input.description?.trim();
+    const includes = Array.isArray(input.includes) ? input.includes.map((item) => item.trim()).filter(Boolean) : [];
+    if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(id) || id.length > 80 || !title || !category || !eyebrow || !usd || !eur || !description) {
+      throw new BadRequestException('Completa identificador, categoría, etiqueta, título, precios y descripción.');
+    }
+    if (!['Presencia', 'Venta', 'Soporte'].includes(category) || title.length > 120 || eyebrow.length > 80 || usd.length > 80 || eur.length > 80 || description.length > 500 || includes.length > 20 || includes.some((item) => item.length > 160)) {
+      throw new BadRequestException('Algún campo del paquete supera el límite permitido.');
+    }
+    return {
+      id, category, eyebrow, title, price: { usd, eur }, description, includes,
+      featured: input.featured === true, active: input.active !== false,
+    };
+  }
+
+  private slugify(value: string): string {
+    return value.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 70);
   }
 
   async createBooking(input: BookingInput): Promise<Record<string, string>> {

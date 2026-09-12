@@ -1,7 +1,14 @@
 import { CommonModule } from '@angular/common';
 import { Component, OnInit, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { AdminBooking, AdminContact, AdminOverview, ApiService } from './api.service';
+import { AdminBooking, AdminContact, AdminOverview, ApiService, ServicePackage } from './api.service';
+
+function emptyService(): ServicePackage {
+  return {
+    id: '', category: 'Presencia', eyebrow: '', title: '',
+    price: { usd: '', eur: '' }, description: '', includes: [], featured: false, active: true,
+  };
+}
 
 @Component({
   selector: 'app-root',
@@ -18,6 +25,13 @@ export class AdminApp implements OnInit {
   overview: AdminOverview | null = null;
   bookings: AdminBooking[] = [];
   contacts: AdminContact[] = [];
+  editingServiceId: string | null = null;
+  serviceEditorOpen = false;
+  serviceForm: ServicePackage = emptyService();
+  serviceIncludesText = '';
+  serviceSaving = false;
+  serviceError = '';
+  serviceMessage = '';
 
   ngOnInit(): void {
     const saved = sessionStorage.getItem('like-media-admin-token');
@@ -55,6 +69,87 @@ export class AdminApp implements OnInit {
     this.overview = null;
     this.bookings = [];
     this.contacts = [];
+    this.cancelServiceEdit();
+  }
+
+  startCreateService(): void {
+    this.editingServiceId = null;
+    this.serviceEditorOpen = true;
+    this.serviceForm = emptyService();
+    this.serviceIncludesText = '';
+    this.serviceError = '';
+    this.serviceMessage = '';
+  }
+
+  editService(service: ServicePackage): void {
+    this.editingServiceId = service.id;
+    this.serviceEditorOpen = true;
+    this.serviceForm = { ...service, price: { ...service.price }, includes: [...service.includes] };
+    this.serviceIncludesText = service.includes.join('\n');
+    this.serviceError = '';
+    this.serviceMessage = '';
+  }
+
+  cancelServiceEdit(): void {
+    this.editingServiceId = null;
+    this.serviceEditorOpen = false;
+    this.serviceForm = emptyService();
+    this.serviceIncludesText = '';
+    this.serviceError = '';
+  }
+
+  saveService(): void {
+    const title = this.serviceForm.title.trim();
+    if (!title || !this.serviceForm.category || !this.serviceForm.eyebrow.trim() || !this.serviceForm.price.usd.trim() || !this.serviceForm.price.eur.trim() || !this.serviceForm.description.trim()) {
+      this.serviceError = 'Completa categoría, etiqueta, título, precios y descripción.';
+      return;
+    }
+    const payload: ServicePackage = {
+      ...this.serviceForm,
+      id: this.serviceForm.id.trim(),
+      title,
+      eyebrow: this.serviceForm.eyebrow.trim(),
+      description: this.serviceForm.description.trim(),
+      price: { usd: this.serviceForm.price.usd.trim(), eur: this.serviceForm.price.eur.trim() },
+      includes: this.serviceIncludesText.split('\n').map((item) => item.trim()).filter(Boolean),
+    };
+    this.serviceSaving = true;
+    this.serviceError = '';
+    this.serviceMessage = '';
+    const request = this.editingServiceId
+      ? this.api.updateAdminService(this.token, this.editingServiceId, payload)
+      : this.api.createAdminService(this.token, payload);
+    request.subscribe({
+      next: () => {
+        this.serviceSaving = false;
+        this.serviceMessage = this.editingServiceId ? 'Paquete actualizado.' : 'Paquete creado y publicado.';
+        this.cancelServiceEdit();
+        this.load();
+      },
+      error: (response: { error?: { message?: string } }) => {
+        this.serviceSaving = false;
+        this.serviceError = response.error?.message ?? 'No se pudo guardar el paquete.';
+      },
+    });
+  }
+
+  toggleService(service: ServicePackage): void {
+    this.serviceSaving = true;
+    this.serviceError = '';
+    this.api.updateAdminService(this.token, service.id, { ...service, active: service.active === false }).subscribe({
+      next: () => { this.serviceSaving = false; this.serviceMessage = service.active === false ? 'Paquete activado.' : 'Paquete archivado.'; this.load(); },
+      error: (response: { error?: { message?: string } }) => { this.serviceSaving = false; this.serviceError = response.error?.message ?? 'No se pudo cambiar el estado.'; },
+    });
+  }
+
+  deleteService(service: ServicePackage): void {
+    if (!window.confirm(`¿Eliminar «${service.title}»? Esta acción no se puede deshacer.`)) return;
+    this.serviceSaving = true;
+    this.serviceError = '';
+    this.api.deleteAdminService(this.token, service.id).subscribe({
+      next: () => { this.serviceSaving = false; this.serviceMessage = 'Paquete eliminado.'; this.load(); },
+      error: (response: { error?: { message?: string } }) => { this.serviceSaving = false; this.serviceError = response.error?.message ?? 'No se pudo eliminar el paquete.'; },
+    });
   }
 
   displayDate(value?: string): string {

@@ -15,6 +15,7 @@ export interface ServicePackage {
   description: string;
   includes: string[];
   featured?: boolean;
+  active?: boolean;
 }
 
 export interface BookingRequest { name: string; email: string; date: string; time: string; website?: string; }
@@ -69,6 +70,18 @@ export class ApiService {
 
   getAdminContacts(token: string): Observable<AdminContact[]> {
     return this.http.get<AdminContact[]>(`${this.baseUrl}/admin/contacts`, { headers: this.adminHeaders(token) });
+  }
+
+  createAdminService(token: string, payload: ServicePackage): Observable<ServicePackage> {
+    return this.http.post<ServicePackage>(`${this.baseUrl}/admin/services`, payload, { headers: this.adminHeaders(token) });
+  }
+
+  updateAdminService(token: string, id: string, payload: ServicePackage): Observable<ServicePackage> {
+    return this.http.patch<ServicePackage>(`${this.baseUrl}/admin/services/${encodeURIComponent(id)}`, payload, { headers: this.adminHeaders(token) });
+  }
+
+  deleteAdminService(token: string, id: string): Observable<{ id: string }> {
+    return this.http.delete<{ id: string }>(`${this.baseUrl}/admin/services/${encodeURIComponent(id)}`, { headers: this.adminHeaders(token) });
   }
 
   private adminHeaders(token: string): HttpHeaders {

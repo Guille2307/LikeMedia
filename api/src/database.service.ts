@@ -55,8 +55,10 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
         price_eur TEXT NOT NULL,
         description TEXT NOT NULL,
         includes JSONB NOT NULL DEFAULT '[]'::jsonb,
-        featured BOOLEAN NOT NULL DEFAULT FALSE
+        featured BOOLEAN NOT NULL DEFAULT FALSE,
+        active BOOLEAN NOT NULL DEFAULT TRUE
       );
+      ALTER TABLE service_packages ADD COLUMN IF NOT EXISTS active BOOLEAN NOT NULL DEFAULT TRUE;
       CREATE TABLE IF NOT EXISTS bookings (
         id TEXT PRIMARY KEY,
         name TEXT NOT NULL,

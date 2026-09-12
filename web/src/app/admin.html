@@ -26,7 +26,28 @@
           <section class="admin-card"><div class="card-heading"><h2>Reservas recientes</h2><span>{{ bookings.length }}</span></div>@if (bookings.length) {<div class="admin-list">@for (booking of bookings; track booking.id) {<article class="admin-row"><div><strong>{{ booking.name }}</strong><small>{{ booking.email }}</small></div><div><b>{{ booking.date }} · {{ booking.time }}</b><small>{{ booking.provider }}</small></div><a [href]="booking.meeting_url" target="_blank" rel="noreferrer">Abrir sala ↗</a></article>}</div>} @else {<p class="empty-state">Todavía no hay reservas.</p>}</section>
           <section class="admin-card"><div class="card-heading"><h2>Mensajes recientes</h2><span>{{ contacts.length }}</span></div>@if (contacts.length) {<div class="admin-list">@for (contact of contacts; track contact.id) {<article class="admin-row contact-row"><div><strong>{{ contact.name }}</strong><small>{{ contact.email }}{{ contact.company ? ' · ' + contact.company : '' }}</small></div><p>{{ contact.message }}</p><a [href]="'mailto:' + contact.email">Responder ↗</a></article>}</div>} @else {<p class="empty-state">Todavía no hay mensajes.</p>}</section>
         </div>
-        <section class="admin-card packages-card"><div class="card-heading"><h2>Paquetes publicados</h2><span>{{ data.services.length }}</span></div><div class="package-grid">@for (service of data.services; track service.id) {<article><small>{{ service.eyebrow }}</small><h3>{{ service.title }}</h3><p>{{ service.price.usd }} · {{ service.price.eur }}</p></article>}</div></section>
+        <section class="admin-card packages-card">
+          <div class="card-heading package-heading"><div><h2>Paquetes y servicios</h2><p class="card-caption">Gestiona lo que aparece en el catálogo público.</p></div><div class="package-actions"><span>{{ data.services.length }}</span><button class="admin-button compact-button" type="button" (click)="startCreateService()">＋ Nuevo paquete</button></div></div>
+          @if (serviceMessage) { <p class="admin-success" role="status">{{ serviceMessage }}</p> }
+          @if (serviceError) { <p class="admin-error" role="alert">{{ serviceError }}</p> }
+          @if (serviceEditorOpen) {
+            <form class="service-form" (ngSubmit)="saveService()">
+              <div class="form-title"><strong>{{ editingServiceId ? 'Editar paquete' : 'Nuevo paquete' }}</strong><button class="text-button" type="button" (click)="cancelServiceEdit()">Cancelar</button></div>
+              <div class="form-grid">
+                <label>Identificador <input name="service-id" [(ngModel)]="serviceForm.id" placeholder="ej. auditoria-datos" [readonly]="editingServiceId !== null"></label>
+                <label>Categoría <select name="service-category" [(ngModel)]="serviceForm.category"><option value="Presencia">Presencia</option><option value="Venta">Venta</option><option value="Soporte">Soporte</option></select></label>
+                <label>Etiqueta / orden <input name="service-eyebrow" [(ngModel)]="serviceForm.eyebrow" placeholder="09 · DATOS"></label>
+                <label>Título <input name="service-title" [(ngModel)]="serviceForm.title" placeholder="Analítica y datos"></label>
+                <label>Precio USD <input name="service-usd" [(ngModel)]="serviceForm.price.usd" placeholder="$500–900"></label>
+                <label>Precio EUR <input name="service-eur" [(ngModel)]="serviceForm.price.eur" placeholder="€500–900"></label>
+              </div>
+              <label>Descripción <textarea name="service-description" rows="2" [(ngModel)]="serviceForm.description" placeholder="Qué resuelve este paquete."></textarea></label>
+              <label>Incluye <small>Una línea por entregable</small><textarea name="service-includes" rows="4" [(ngModel)]="serviceIncludesText" placeholder="Auditoría inicial&#10;Informe de oportunidades&#10;Reunión de presentación"></textarea></label>
+              <div class="form-options"><label class="check-label"><input name="service-active" type="checkbox" [(ngModel)]="serviceForm.active"> Visible en el catálogo</label><label class="check-label"><input name="service-featured" type="checkbox" [(ngModel)]="serviceForm.featured"> Destacar paquete</label><button class="admin-button compact-button" type="submit" [disabled]="serviceSaving">{{ serviceSaving ? 'Guardando…' : (editingServiceId ? 'Guardar cambios' : 'Crear paquete') }}</button></div>
+            </form>
+          }
+          <div class="package-grid">@for (service of data.services; track service.id) {<article [class.package-inactive]="service.active === false"><div class="package-meta"><small>{{ service.eyebrow }}</small><span>{{ service.active === false ? 'Archivado' : 'Publicado' }}</span></div><h3>{{ service.title }}</h3><p>{{ service.price.usd }} · {{ service.price.eur }}</p><div class="package-card-actions"><button class="text-button" type="button" (click)="editService(service)">Editar</button><button class="text-button" type="button" (click)="toggleService(service)">{{ service.active === false ? 'Activar' : 'Archivar' }}</button><button class="text-button danger-button" type="button" (click)="deleteService(service)">Eliminar</button></div></article>}</div>
+        </section>
       }
     </section>
   }
