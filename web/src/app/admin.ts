@@ -1,6 +1,7 @@
 import { CommonModule } from '@angular/common';
 import { Component, OnInit, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { timeout } from 'rxjs';
 import { AdminBooking, AdminContact, AdminOverview, ApiService, ServicePackage } from './api.service';
 
 function emptyService(): ServicePackage {
@@ -43,7 +44,7 @@ export class AdminApp implements OnInit {
     if (!token) { this.error = 'Introduce el token privado de administración.'; return; }
     this.loading = true;
     this.error = '';
-    this.api.getAdminOverview(token).subscribe({
+    this.api.getAdminOverview(token).pipe(timeout({ first: 20_000 })).subscribe({
       next: (overview) => {
         this.overview = overview;
         this.bookings = overview.recentBookings;
@@ -52,11 +53,12 @@ export class AdminApp implements OnInit {
         this.loading = false;
         sessionStorage.setItem('like-media-admin-token', token);
       },
-      error: (response: { status?: number; error?: { message?: string } }) => {
+      error: (response: { status?: number; error?: { message?: string }; name?: string }) => {
         this.loading = false;
         this.authenticated = false;
         if (response.status === 401) this.error = 'El token no es válido.';
         else if (response.status === 503) this.error = 'El panel aún no está activado en el servidor.';
+        else if (response.name === 'TimeoutError') this.error = 'El servidor está tardando demasiado. Comprueba tu conexión y vuelve a intentarlo.';
         else this.error = response.error?.message ?? 'No se pudo cargar el panel.';
       },
     });
