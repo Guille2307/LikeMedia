@@ -44,7 +44,12 @@ interface LikeMediaRuntimeConfig {
 @Injectable({ providedIn: 'root' })
 export class ApiService {
   private readonly http = inject(HttpClient);
-  private readonly baseUrl = ((globalThis as LikeMediaRuntimeConfig).__LIKE_MEDIA_API_URL__ ?? 'http://localhost:3000/api').replace(/\/$/, '');
+  private readonly baseUrl = (
+    (globalThis as LikeMediaRuntimeConfig).__LIKE_MEDIA_API_URL__
+    ?? (typeof window !== 'undefined' && ['likemedia.es', 'www.likemedia.es'].includes(window.location.hostname)
+      ? '/gateway'
+      : 'http://localhost:3000/api')
+  ).replace(/\/$/, '');
 
   getServices(): Observable<ServicePackage[]> {
     return this.http.get<ServicePackage[]>(`${this.baseUrl}/services`);
