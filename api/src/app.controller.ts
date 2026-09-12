@@ -39,8 +39,10 @@ export class AppController {
   }
 
   @Post('api/auth/login')
-  login(@Body() body: AdminLoginInput) {
-    return this.authService.login(body ?? {});
+  async login(@Body() body: AdminLoginInput) {
+    const session = this.authService.login(body ?? {});
+    const overview = await this.appService.getAdminOverview(session.accessToken);
+    return { ...session, overview };
   }
 
   @Get('api/admin/overview')

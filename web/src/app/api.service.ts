@@ -35,7 +35,7 @@ export interface AdminBooking { id: string; name: string; email: string; date: s
 export interface AdminContact { id: string; name: string; email: string; company: string; message: string; created_at?: string; }
 export interface AdminOverview { counts: { bookings: number; contacts: number; services: number }; recentBookings: AdminBooking[]; recentContacts: AdminContact[]; services: ServicePackage[]; }
 export interface AdminLoginRequest { email: string; password: string; }
-export interface AdminLoginResponse { accessToken: string; tokenType: 'Bearer'; expiresIn: number; user: { email: string; name: string; role: 'admin' }; }
+export interface AdminLoginResponse { accessToken: string; tokenType: 'Bearer'; expiresIn: number; user: { email: string; name: string; role: 'admin' }; overview: AdminOverview; }
 
 interface LikeMediaRuntimeConfig {
   __LIKE_MEDIA_API_URL__?: string;

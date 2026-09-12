@@ -4,13 +4,7 @@
     @if (authenticated) { <div class="admin-session">{{ adminName }}</div><button class="admin-logout" type="button" (click)="logout()">Cerrar sesión</button> }
   </header>
 
-  @if (sessionChecking) {
-    <section class="admin-login admin-session-check" aria-labelledby="admin-session-title" aria-live="polite">
-      <p class="admin-eyebrow">SESIÓN SEGURA</p>
-      <h1 id="admin-session-title">Comprobando tu sesión</h1>
-      <p><span class="button-spinner" aria-hidden="true"></span> Validando el acceso al panel…</p>
-    </section>
-  } @else if (!authenticated) {
+  @if (!authenticated) {
     <section class="admin-login" aria-labelledby="admin-title">
       <p class="admin-eyebrow">ÁREA PRIVADA</p>
       <h1 id="admin-title">Panel de gestión</h1>
