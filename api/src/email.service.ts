@@ -20,6 +20,10 @@ export interface EmailDeliveryResult {
 @Injectable()
 export class EmailService {
   private readonly logger = new Logger(EmailService.name);
+  private readonly provider = (process.env.MAIL_PROVIDER?.trim().toLowerCase() || 'brevo') as 'brevo' | 'smtp' | 'auto';
+  private readonly brevoApiKey = process.env.BREVO_API_KEY?.trim();
+  private readonly brevoSenderEmail = process.env.BREVO_SENDER_EMAIL?.trim() || 'info@likemedia.es';
+  private readonly brevoSenderName = process.env.BREVO_SENDER_NAME?.trim() || 'Like Media';
   private readonly recipient = process.env.MAIL_TO?.trim() || 'info@likemedia.es';
   private readonly from = process.env.MAIL_FROM?.trim() || process.env.SMTP_USER?.trim() || 'info@likemedia.es';
   private readonly transporter?: Transporter;
@@ -41,7 +45,11 @@ export class EmailService {
     });
   }
 
-  isConfigured(): boolean { return Boolean(this.transporter); }
+  isConfigured(): boolean {
+    if (this.provider === 'brevo') return Boolean(this.brevoApiKey);
+    if (this.provider === 'smtp') return Boolean(this.transporter);
+    return Boolean(this.brevoApiKey || this.transporter);
+  }
 
   async sendBooking(booking: BookingEmail): Promise<EmailDeliveryResult> {
     const calendarInvite = this.createCalendarInvite(booking);
@@ -124,11 +132,15 @@ export class EmailService {
   }
 
   private async send(message: { to: string; subject: string; text: string; replyTo?: string; attachments?: Array<{ filename: string; content: string; contentType: string }> }): Promise<boolean> {
-    if (!this.transporter) {
-      this.logger.warn('Email no configurado: define SMTP_HOST, SMTP_USER y SMTP_PASS para activar notificaciones.');
-      return false;
-    }
+    if (this.provider === 'brevo' || (this.provider === 'auto' && this.brevoApiKey)) return this.sendWithBrevo(message);
+    if (this.provider === 'smtp' || (this.provider === 'auto' && this.transporter)) return this.sendWithSmtp(message);
 
+    this.logger.warn('Email no configurado: define BREVO_API_KEY o las variables SMTP_* para activar notificaciones.');
+    return false;
+  }
+
+  private async sendWithSmtp(message: { to: string; subject: string; text: string; replyTo?: string; attachments?: Array<{ filename: string; content: string; contentType: string }> }): Promise<boolean> {
+    if (!this.transporter) return false;
     let timeout: ReturnType<typeof setTimeout> | undefined;
     try {
       await Promise.race([
@@ -143,6 +155,45 @@ export class EmailService {
       return false;
     } finally {
       if (timeout) clearTimeout(timeout);
+    }
+  }
+
+  private async sendWithBrevo(message: { to: string; subject: string; text: string; replyTo?: string; attachments?: Array<{ filename: string; content: string; contentType: string }> }): Promise<boolean> {
+    if (!this.brevoApiKey) return false;
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 15_000);
+    const payload = {
+      sender: { email: this.brevoSenderEmail, name: this.brevoSenderName },
+      to: [{ email: message.to }],
+      subject: message.subject,
+      textContent: message.text,
+      ...(message.replyTo ? { replyTo: { email: message.replyTo } } : {}),
+      ...(message.attachments?.length ? {
+        attachment: message.attachments.map((attachment) => ({
+          name: attachment.filename,
+          content: Buffer.from(attachment.content, 'utf8').toString('base64'),
+        })),
+      } : {}),
+    };
+
+    try {
+      const response = await fetch('https://api.brevo.com/v3/smtp/email', {
+        method: 'POST',
+        headers: { accept: 'application/json', 'api-key': this.brevoApiKey, 'content-type': 'application/json' },
+        body: JSON.stringify(payload),
+        signal: controller.signal,
+      });
+      if (!response.ok) {
+        const detail = (await response.text()).slice(0, 240);
+        this.logger.error(`Brevo rechazó el email "${message.subject}" (${response.status}): ${detail}`);
+        return false;
+      }
+      return true;
+    } catch (error) {
+      this.logger.error(`No se pudo enviar el email "${message.subject}" mediante Brevo`, error instanceof Error ? error.message : undefined);
+      return false;
+    } finally {
+      clearTimeout(timeout);
     }
   }
 
