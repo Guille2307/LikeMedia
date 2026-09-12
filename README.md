@@ -32,4 +32,4 @@ La implementación inicial usa **Jitsi Meet** como proveedor gratuito: al confir
 
 ## Producción pendiente
 
-Con `DATABASE_URL` configurada, la API crea las tablas `service_packages`, `bookings` y `contacts` al arrancar. Sin esa variable mantiene un fallback temporal en memoria para desarrollo. Antes de publicar se debe conectar un proveedor de correo, un calendario real (Google Calendar/Cal.com/Calendly) y las credenciales de dominio/hosting.
+Con `DATABASE_URL` configurada, la API crea las tablas `service_packages`, `bookings` y `contacts` al arrancar. Sin esa variable mantiene un fallback temporal en memoria para desarrollo. Las notificaciones de contacto y reservas se activan al definir las variables `SMTP_*` y `MAIL_*` en Railway; nunca guardes la contraseña SMTP en Git. Sigue pendiente conectar un calendario real (Google Calendar/Cal.com/Calendly) y añadir un panel de gestión.

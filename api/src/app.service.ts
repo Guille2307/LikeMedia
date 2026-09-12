@@ -1,5 +1,6 @@
 import { BadRequestException, Injectable, InternalServerErrorException } from '@nestjs/common';
 import { DatabaseService } from './database.service.js';
+import { EmailService } from './email.service.js';
 
 export type ServiceCategory = 'Presencia' | 'Venta' | 'Soporte';
 
@@ -88,7 +89,7 @@ export class AppService {
   private readonly bookings: Array<Record<string, string>> = [];
   private readonly contacts: Array<Record<string, string>> = [];
 
-  constructor(private readonly database: DatabaseService) {}
+  constructor(private readonly database: DatabaseService, private readonly email: EmailService) {}
 
   async getServices(): Promise<ServicePackage[]> {
     const result = await this.database.query<{
@@ -142,6 +143,7 @@ export class AppService {
     } else {
       this.bookings.push(booking);
     }
+    await this.email.sendBooking(booking);
     return { ...booking, message: 'Solicitud recibida. Te enviaremos la confirmación por email.' };
   }
 
@@ -168,6 +170,7 @@ export class AppService {
     } else {
       this.contacts.push(contact);
     }
+    await this.email.sendContact(contact);
     return { ...contact, status: 'received', message: 'Mensaje recibido. Te responderemos pronto.' };
   }
 }
